@@ -1,8 +1,55 @@
+import pandas as pd
 import scipy.signal
-import re
+import scipy.fft
 import matplotlib.pyplot as plt
+import numpy as np
 
 def main():
+    directory = r"Nature Raw Txt"
+    EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
+    EEGdata = EEGdata.drop(columns=[16], axis=1)
+
+    Ch1 = pd.Series(EEGdata[0])
+
+    freqCh1 = scipy.fft.fft(Ch1.values)
+
+    plt.figure(2, figsize=(12, 9))
+
+    # Data for plotting
+    #t = np.arange(0.0, 60.002, 0.002)
+    #s = freqCh1 /500.0
+
+    #fig, ax = plt.subplots()
+
+
+    #ax.plot(t, s)
+
+    #ax.set(xlabel='time (s)', ylabel='Microvolts (muV)', title='EEG Data Sample')
+    #ax.grid()
+    #plt.ylim(0,45)
+
+    #plt.show()
+
+
+
+    #x value is time, 60 sec at 500Hz
+    x = [None] * 30001
+    for i in range (0, 30001):
+        x[i] = i / 500.0
+
+    #not sure what units original EEG data are in?
+    h = freqCh1 / 2
+    plt.plot(x, abs(h))
+
+
+    plt.ylim(0, 60)
+    plt.show()
+    #plt.grid(True)
+    #plt.xlabel('Time (s)')
+    #plt.ylabel('Frequency (Hz)')
+    #plt.title('EEG Data in Frequency Domain for Ball2 Sound N2')
+
+
     numtaps1 = 100
     numtaps2 = 200
     cutoff1 = 40
