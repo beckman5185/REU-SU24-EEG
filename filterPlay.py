@@ -35,20 +35,22 @@ def main():
     #x value is time, 60 sec at 500Hz
     x = [None] * 30001
     for i in range (0, 30001):
-        x[i] = i / 500.0
+        x[i] = i / 60.0
 
     #not sure what units original EEG data are in?
-    h = freqCh1 / 2
+    h = freqCh1
     plt.plot(x, abs(h))
 
 
-    plt.ylim(0, 60)
+    plt.xlim(8, 13)
+    plt.ylim(0, 40000)
     plt.show()
     #plt.grid(True)
     #plt.xlabel('Time (s)')
     #plt.ylabel('Frequency (Hz)')
     #plt.title('EEG Data in Frequency Domain for Ball2 Sound N2')
 
+def filterCompare():
 
     numtaps1 = 100
     numtaps2 = 200
@@ -100,5 +102,170 @@ def main():
     plt.show()
     # plt.savefig('plot.png')
 
+
+
+
+def tryFilter():
+    directory = r"Nature Raw Txt"
+    EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
+    EEGdata = EEGdata.drop(columns=[16], axis=1)
+
+    #Data for plotting
+    t = np.arange(0.0, 60.002, 0.002)
+    s = pd.Series(EEGdata[0]).values / 2
+
+    fig, ax = plt.subplots()
+
+    ax.plot(t, s)
+
+    ax.set(xlabel='time (s)', ylabel='Microvolts (muV)', title='EEG Data Sample Time Domain (unfiltered)')
+    ax.grid()
+
+    plt.show()
+
+    Ch1 = scipy.fft.fft(pd.Series(EEGdata[0]).values)
+
+    numtaps1 = 100
+    cutoff1 = 40
+    samplingFreq = 500
+    hammingCoeffs = scipy.signal.firwin(numtaps1, cutoff1, window='hamming', pass_zero='lowpass', fs=samplingFreq)
+
+    denoms = [1] * len(hammingCoeffs)
+
+    filteredData = scipy.signal.lfilter(hammingCoeffs, denoms, Ch1)
+
+    hammingCoeffs2 = scipy.signal.firwin(numtaps1, [1, cutoff1], window='hamming', pass_zero='bandpass', fs=samplingFreq)
+
+    filterData2 = scipy.signal.lfilter(hammingCoeffs2, denoms, pd.Series(EEGdata[0]).values)
+
+    x = [None] * 30001
+    for i in range(0, 30001):
+        x[i] = i / 60.0
+
+    h = filterData2
+
+    plt.xlim(8, 13)
+    plt.ylim(0, 20)
+
+    plt.title('Test Graph: FIR on time domain, plotted against frequency')
+    plt.plot(x, abs(h))
+    plt.show()
+
+
+
+
+
+
+
+    x = [None] * 30001
+    for i in range(0, 30001):
+        x[i] = i / 500.0
+
+    h = scipy.fft.ifft(filterData2)
+
+    plt.xlim(10, 30)
+    plt.ylim(-0.05, 0.05)
+
+    plt.title('Reversed IFFT for Filtered Data')
+
+    plt.plot(x, h)
+    plt.show()
+
+
+
+
+
+
+
+    # x value is time, 60 sec at 500Hz
+    x = [None] * 30001
+    for i in range(0, 30001):
+        x[i] = i / 500.0
+
+    # not sure what units original EEG data are in?
+    h = filteredData / 500 # to convert it to volts?
+    plt.plot(x, abs(h))
+
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Spectral density (V)?')
+    plt.title('Frequency Domain EEG Data (filtered)')
+
+    #plt.ylim(0, 60)
+    plt.show()
+
+
+
+
+
+
+    x = [None] * 30001
+    for i in range(0, 30001):
+        x[i] = i / 500.0
+
+    timeFiltered = scipy.fft.ifft(filteredData)
+
+
+
+    # Data for plotting
+    t = np.arange(0.0, 60.002, 0.002)
+    s = timeFiltered / 1000
+
+
+    fig, ax = plt.subplots()
+
+    ax.plot(t, s)
+
+    ax.set(xlabel='time (s)', ylabel='Microvolts (muV)', title='EEG Data Time Domain (Filtered)')
+    ax.grid()
+    #plt.ylim(0,45)
+
+    plt.show()
+
+
+
+
+    #plt.plot(x, abs(h))
+
+    #plt.ylim(0, 60)
+    #plt.show()
+
+
+def tryFilterNoGraphs():
+    directory = r"Nature Raw Txt"
+    EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
+    EEGdata = EEGdata.drop(columns=[16], axis=1)
+
+
+    #Units: microvolts
+    Ch1 = pd.Series(EEGdata[0])
+    print(Ch1)
+
+
+    #Units: Hz
+    freqCh1 = scipy.fft.fft(pd.Series(EEGdata[0]).values)
+    print(freqCh1)
+
+    numtaps1 = 100
+    cutoff1 = 40
+    samplingFreq = 500
+    hammingCoeffs = scipy.signal.firwin(numtaps1, cutoff1, window='hamming', pass_zero='lowpass', fs=samplingFreq)
+
+    denoms = [1] * len(hammingCoeffs)
+
+    #Do we give it frequency or time series? What are the units? Does it return frequency or time series?
+    filteredData = scipy.signal.lfilter(hammingCoeffs, denoms, freqCh1)
+
+    print(filteredData)
+
+
+    #Units: ?
+    timeFiltered = scipy.fft.ifft(filteredData)
+
+    print(timeFiltered)
+
+
 if __name__ == "__main__":
-    main()
+    #main()
+    #filterCompare()
+    tryFilter()
+    #tryFilterNoGraphs()
