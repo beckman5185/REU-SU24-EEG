@@ -3,6 +3,8 @@ import scipy.signal
 import scipy.fft
 import matplotlib.pyplot as plt
 import numpy as np
+plt.rcParams.update({'font.size': 20})
+
 
 def main():
     directory = r"Nature Raw Txt"
@@ -32,7 +34,7 @@ def main():
 
 
 
-    #x value is time, 60 sec at 500Hz
+    #x value is frequency, 60 sec at 500Hz
     x = [None] * 30001
     for i in range (0, 30001):
         x[i] = i / 60.0
@@ -43,12 +45,13 @@ def main():
 
 
     plt.xlim(8, 13)
-    plt.ylim(0, 40000)
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Wave Amplitude (microV)')
+    plt.title('EEG Data in Frequency Domain (unfiltered)')
+    plt.ylim(0, 60000)
     plt.show()
     #plt.grid(True)
-    #plt.xlabel('Time (s)')
-    #plt.ylabel('Frequency (Hz)')
-    #plt.title('EEG Data in Frequency Domain for Ball2 Sound N2')
+
 
 def filterCompare():
 
@@ -61,7 +64,10 @@ def filterCompare():
     hammingCoeffs2 = scipy.signal.firwin(numtaps2, cutoff1, window='hamming', pass_zero='lowpass', fs=samplingFreq)
     hammingCoeffs3 = scipy.signal.firwin(numtaps1, cutoff2, window='hamming', pass_zero='lowpass', fs=samplingFreq)
     hammingCoeffs4 = scipy.signal.firwin(numtaps2, cutoff2, window='hamming', pass_zero='lowpass', fs=samplingFreq)
-    #rectCoeffs = scipy.signal.firwin(numtaps1, cutoff1, window='boxcar', pass_zero='lowpass', fs=samplingFreq)
+    rectCoeffs = scipy.signal.firwin(numtaps1, cutoff1, window='boxcar', pass_zero='lowpass', fs=samplingFreq)
+    rectCoeffs2 = scipy.signal.firwin(numtaps2, cutoff1, window='boxcar', pass_zero='lowpass', fs=samplingFreq)
+    rectCoeffs3 = scipy.signal.firwin(numtaps1, cutoff2, window='boxcar', pass_zero='lowpass', fs=samplingFreq)
+    rectCoeffs4 = scipy.signal.firwin(numtaps2, cutoff2, window='boxcar', pass_zero='lowpass', fs=samplingFreq)
 
     #print(hammingCoeffs)
     #print(rectCoeffs)
@@ -77,16 +83,16 @@ def filterCompare():
 
     # Plot the frequency response of each filter.
     w, h = scipy.signal.freqz(hammingCoeffs, 1, worN=2000, fs=samplingFreq)
-    plt.plot(w, abs(h), label="Hamming window 100 taps 40Hz")
+    plt.plot(w, abs(h), label="100 taps 40Hz")
 
-    w, h = scipy.signal.freqz(hammingCoeffs2, 1, worN=2000, fs=samplingFreq)
-    plt.plot(w, abs(h), label="Hamming window 200 taps 40Hz")
+    #w, h = scipy.signal.freqz(hammingCoeffs2, 1, worN=2000, fs=samplingFreq)
+    #plt.plot(w, abs(h), label="200 taps 40Hz")
 
     w, h = scipy.signal.freqz(hammingCoeffs3, 1, worN=2000, fs=samplingFreq)
-    plt.plot(w, abs(h), label="Hamming window 100 taps 45Hz")
+    plt.plot(w, abs(h), label="100 taps 45Hz")
 
-    w, h = scipy.signal.freqz(hammingCoeffs4, 1, worN=2000, fs=samplingFreq)
-    plt.plot(w, abs(h), label="Hamming window 200 taps 45Hz")
+    #w, h = scipy.signal.freqz(hammingCoeffs4, 1, worN=2000, fs=samplingFreq)
+    #plt.plot(w, abs(h), label="200 taps 45Hz")
 
     #w, h = scipy.signal.freqz(rectCoeffs, 1, worN=2000, fs=samplingFreq)
     #plt.plot(w, abs(h), label="Rectangular window 100 taps 40Hz")
@@ -97,12 +103,56 @@ def filterCompare():
     plt.legend(shadow=True, framealpha=1)
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Gain')
-    plt.title('Frequency response of several FIR filters')
+    plt.title('Frequency response of Hamming window FIR filters')
 
     plt.show()
-    # plt.savefig('plot.png')
 
 
+    plt.figure(1, figsize=(12, 9))
+    plt.clf()
+
+    # First plot the desired ideal response as a green(ish) rectangle.
+    rect = plt.Rectangle((0, 0), 30, 1.0,
+                         facecolor="#60ff60", alpha=0.2)
+    plt.gca().add_patch(rect)
+
+    # Plot the frequency response of each filter.
+    w, h = scipy.signal.freqz(hammingCoeffs, 1, worN=2000, fs=samplingFreq)
+    plt.plot(w, abs(h), label="Hamming window")
+
+    w, h = scipy.signal.freqz(rectCoeffs, 1, worN=2000, fs=samplingFreq)
+    plt.plot(w, abs(h), label="Boxcar window")
+
+    plt.xlim(0, 50)
+    plt.ylim(0, 1.1)
+    plt.grid(True)
+    plt.legend(shadow=True, framealpha=1)
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Gain')
+    plt.title('Frequency response of FIR filters, 100 taps 40 Hz')
+    plt.show()
+
+
+    hammingCoeffsFinal = scipy.signal.firwin(numtaps2, [1, cutoff1], window='hamming', pass_zero='bandpass', fs=samplingFreq)
+    plt.figure(1, figsize=(12, 9))
+    plt.clf()
+
+    # First plot the desired ideal response as a green(ish) rectangle.
+    rect = plt.Rectangle((4, 0), 26, 1.0,
+                         facecolor="#60ff60", alpha=0.2)
+    plt.gca().add_patch(rect)
+
+    # Plot the frequency response of each filter.
+    w, h = scipy.signal.freqz(hammingCoeffsFinal, 1, worN=2000, fs=samplingFreq)
+    plt.plot(w, abs(h))
+
+    plt.xlim(0, 50)
+    plt.ylim(0, 1.1)
+    plt.grid(True)
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Gain')
+    plt.title('FIR Filter: Hamming, bandpass 1-40Hz, 200 taps')
+    plt.show()
 
 
 def tryFilter():
@@ -118,7 +168,7 @@ def tryFilter():
 
     ax.plot(t, s)
 
-    ax.set(xlabel='time (s)', ylabel='Microvolts (muV)', title='EEG Data Sample Time Domain (unfiltered)')
+    ax.set(xlabel='Time (s)', ylabel='Wave Amplitude (microV)', title='EEG Data in Time Domain (unfiltered)')
     ax.grid()
 
     plt.show()
@@ -266,6 +316,6 @@ def tryFilterNoGraphs():
 
 if __name__ == "__main__":
     #main()
-    #filterCompare()
-    tryFilter()
+    filterCompare()
+    #tryFilter()
     #tryFilterNoGraphs()

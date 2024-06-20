@@ -94,7 +94,7 @@ def main():
     print("Time domain LCS: " + str(lcs))
     print("Time domain LCS length: " + str(len(lcs)))
     print("Frequency domain LCS: " + str(freqLCS))
-    print("Frequency domain LCS length :" + str(len(freqLCS)))
+    print("Frequency domain LCS length: " + str(len(freqLCS)))
 
 if __name__ == "__main__":
     main()

@@ -72,7 +72,9 @@ def TS_Unfiltered():
     #Cosine similarity measure
     cosVal = cosine_similarity(Ch1, Ch9)
     freqCosVal = cosine_similarity(freqCh1, freqCh9)
-    print("Cos measure of similarity: " + str(cosVal) + " in time domain, " + str(freqCosVal) + " in frequency domain")
+    print("Cos measure of similarity: ")
+    print(str(cosVal) + " in time domain")
+    print(str(freqCosVal) + " in frequency domain")
 
     #Root mean square similarity measure
     #RMSVal = RMS_similarity(Ch1, Ch9)
@@ -83,17 +85,23 @@ def TS_Unfiltered():
     #Peak similarity measure
     peakVal = peak_similarity(Ch1, Ch9)
     freqPeakVal = peak_similarity(freqCh1, freqCh9)
-    print("Peak measure of similarity: " + str(peakVal) + " in time domain, " + str(freqPeakVal) + " in frequency domain")
+    print("Peak measure of similarity: ")
+    print(str(peakVal) + " in time domain")
+    print(str(freqPeakVal) + " in frequency domain")
 
     #Sum of squared differences similarity measure
     SSDVal = SSD_similarity(Ch1, Ch9)
     freqSSDVal = SSD_similarity(freqCh1, freqCh9)
-    print("SSD measure of similarity: " + str(SSDVal) + " in time domain, " + str(freqSSDVal) + " in frequency domain")
+    print("SSD measure of similarity: ")
+    print(str(SSDVal) + " in time domain")
+    print(str(freqSSDVal) + " in frequency domain")
 
     #Need to figure out dynamic time warping - casting to real?
     distance, path = fastdtw(np.array([Ch1.values]), np.array([Ch9.values]), dist=euclidean)
     freqDistance, freqPath = fastdtw(np.array([freqCh1]), np.array([freqCh9]), dist=euclidean)
-    print("DTW measure of similarity: " + str(distance) + " in time domain, " + str(freqDistance) + " in frequency domain")
+    print("DTW measure of similarity: ")
+    print(str(distance) + " in time domain")
+    print(str(freqDistance) + " in frequency domain")
 
     #See other file for Hunt Syzmanski algorithm
     #LCSVal = LCS_similarity(Ch1, Ch9)
