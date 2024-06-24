@@ -106,10 +106,10 @@ def main():
     lcs = LCS(Ch1, Ch9, error)
     freqLCS = LCS(freqCh1, freqCh9, error)
 
-    print("Time domain LCS: " + str(lcs))
+    #print("Time domain LCS: " + str(lcs))
     print("Time domain LCS length: " + str(len(lcs)))
     print("Time domain LCS relative length: " + str(len(lcs)/len(Ch1)))
-    print("Frequency domain LCS: " + str(freqLCS))
+    #print("Frequency domain LCS: " + str(freqLCS))
     print("Frequency domain LCS length: " + str(len(freqLCS)))
     print("Frequency domain LCS relative length: " + str(len(freqLCS)/len(freqCh1)))
 
