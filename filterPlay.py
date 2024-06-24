@@ -6,71 +6,66 @@ import numpy as np
 plt.rcParams.update({'font.size': 20})
 
 
-def main():
+def rawFreqPlots():
     directory = r"Nature Raw Txt"
     EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
     EEGdata = EEGdata.drop(columns=[16], axis=1)
 
     Ch1 = pd.Series(EEGdata[0])
+    Ch9 = pd.Series(EEGdata[8])
 
     freqCh1 = scipy.fft.fft(Ch1.values)
+    freqCh9 = scipy.fft.fft(Ch9.values)
 
     plt.figure(2, figsize=(12, 9))
-
-    # Data for plotting
-    #t = np.arange(0.0, 60.002, 0.002)
-    #s = freqCh1 /500.0
-
-    #fig, ax = plt.subplots()
-
-
-    #ax.plot(t, s)
-
-    #ax.set(xlabel='time (s)', ylabel='Microvolts (muV)', title='EEG Data Sample')
-    #ax.grid()
-    #plt.ylim(0,45)
-
-    #plt.show()
-
-
 
     #x value is frequency, 60 sec at 500Hz
     x = [None] * 30001
     for i in range (0, 30001):
         x[i] = i / 60.0
 
-    #not sure what units original EEG data are in?
+
+    #Plotting Ch1 and Ch9 data on same graph
     h = freqCh1
-    plt.plot(x, abs(h))
+    plt.plot(x, abs(h), label="Fp1, Channel 1")
+    h = freqCh9
+    plt.plot(x, abs(h), label="Fp2, Channel 2")
 
-
+    #show alpha band only
     plt.xlim(8, 13)
+
+    #graph labels
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Wave Amplitude (microV)')
     plt.title('EEG Data in Frequency Domain (unfiltered)')
+    plt.legend(shadow=True, framealpha=1)
     plt.ylim(0, 60000)
     plt.show()
-    #plt.grid(True)
 
 
 def filterCompare():
 
+    #Sample parameters
     numtaps1 = 100
     numtaps2 = 200
     cutoff1 = 40
     cutoff2 = 45
     samplingFreq = 500
+
+    #Hamming window samples
     hammingCoeffs = scipy.signal.firwin(numtaps1, cutoff1, window='hamming', pass_zero='lowpass', fs=samplingFreq)
     hammingCoeffs2 = scipy.signal.firwin(numtaps2, cutoff1, window='hamming', pass_zero='lowpass', fs=samplingFreq)
     hammingCoeffs3 = scipy.signal.firwin(numtaps1, cutoff2, window='hamming', pass_zero='lowpass', fs=samplingFreq)
     hammingCoeffs4 = scipy.signal.firwin(numtaps2, cutoff2, window='hamming', pass_zero='lowpass', fs=samplingFreq)
+
+    #Boxcar window samples
     rectCoeffs = scipy.signal.firwin(numtaps1, cutoff1, window='boxcar', pass_zero='lowpass', fs=samplingFreq)
     rectCoeffs2 = scipy.signal.firwin(numtaps2, cutoff1, window='boxcar', pass_zero='lowpass', fs=samplingFreq)
     rectCoeffs3 = scipy.signal.firwin(numtaps1, cutoff2, window='boxcar', pass_zero='lowpass', fs=samplingFreq)
     rectCoeffs4 = scipy.signal.firwin(numtaps2, cutoff2, window='boxcar', pass_zero='lowpass', fs=samplingFreq)
 
-    #print(hammingCoeffs)
-    #print(rectCoeffs)
+
+    #Comparing 4 Hamming filters
 
     # Plot the frequency responses of the filters.
     plt.figure(1, figsize=(12, 9))
@@ -94,8 +89,6 @@ def filterCompare():
     #w, h = scipy.signal.freqz(hammingCoeffs4, 1, worN=2000, fs=samplingFreq)
     #plt.plot(w, abs(h), label="200 taps 45Hz")
 
-    #w, h = scipy.signal.freqz(rectCoeffs, 1, worN=2000, fs=samplingFreq)
-    #plt.plot(w, abs(h), label="Rectangular window 100 taps 40Hz")
 
     plt.xlim(0, 50)
     plt.ylim(0, 1.1)
@@ -107,6 +100,8 @@ def filterCompare():
 
     plt.show()
 
+
+    #Comparing Hamming and boxcar filters
 
     plt.figure(1, figsize=(12, 9))
     plt.clf()
@@ -133,6 +128,12 @@ def filterCompare():
     plt.show()
 
 
+def finalFilter():
+
+    numtaps2 =  200
+    cutoff1 = 40
+
+    #Hamming window, bandpass 1-40 Hz, 200 taps
     hammingCoeffsFinal = scipy.signal.firwin(numtaps2, [1, cutoff1], window='hamming', pass_zero='bandpass', fs=samplingFreq)
     plt.figure(1, figsize=(12, 9))
     plt.clf()
@@ -155,7 +156,7 @@ def filterCompare():
     plt.show()
 
 
-def tryFilter():
+def rawTimePlots():
     directory = r"Nature Raw Txt"
     EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
     EEGdata = EEGdata.drop(columns=[16], axis=1)
@@ -172,6 +173,11 @@ def tryFilter():
     ax.grid()
 
     plt.show()
+
+def tryFilter():
+    directory = r"Nature Raw Txt"
+    EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
+    EEGdata = EEGdata.drop(columns=[16], axis=1)
 
     Ch1 = scipy.fft.fft(pd.Series(EEGdata[0]).values)
 
@@ -315,7 +321,9 @@ def tryFilterNoGraphs():
 
 
 if __name__ == "__main__":
-    #main()
+    #rawFreqPlots()
+    #rawTimePlots()
     filterCompare()
+    #finalFilter()
     #tryFilter()
     #tryFilterNoGraphs()

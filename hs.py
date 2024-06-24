@@ -10,10 +10,13 @@
 import bisect
 import pandas as pd
 import scipy.fft
+import numpy as np
 
 
-def LCS(A, B):
-    m, n = len(A), len(B)
+#Audrey change: added error as a parameter
+def LCS(A, B, error):
+    m, n = (len(A), len(B))
+
 
     # Step 1: build linked lists
     matchlist = [[] for k in range(m + 1)]
@@ -23,9 +26,10 @@ def LCS(A, B):
     ai = bi = 0
     while ai < m and bi < n:
         av, bv = aa[ai][0], bb[bi][0]
-        if av < bv:
+        #Audrey change: accounting for error bound instead of exact match
+        if (av + error) < bv:
             ai += 1
-        elif av > bv:
+        elif (av - error) > bv:
             bi += 1
         else:
             k = aa[ai][1]
@@ -88,13 +92,28 @@ def main():
     freqCh1 = scipy.fft.fft(Ch1.values)
     freqCh9 = scipy.fft.fft(Ch9.values)
 
-    lcs = LCS(Ch1, Ch9)
-    freqLCS = LCS(freqCh1, freqCh9)
+    #getting average of alpha frequency band
+    low = 8*60
+    high = 13*60
+    sum = 0
+    for i in range (low, high):
+        sum += freqCh1[i]
+
+    #getting error from mean of alpha frequency band
+    mean = sum/len(freqCh1)
+    error = mean/10
+
+    lcs = LCS(Ch1, Ch9, error)
+    freqLCS = LCS(freqCh1, freqCh9, error)
 
     print("Time domain LCS: " + str(lcs))
     print("Time domain LCS length: " + str(len(lcs)))
+    print("Time domain LCS relative length: " + str(len(lcs)/len(Ch1)))
     print("Frequency domain LCS: " + str(freqLCS))
     print("Frequency domain LCS length: " + str(len(freqLCS)))
+    print("Frequency domain LCS relative length: " + str(len(freqLCS)/len(freqCh1)))
+
+
 
 if __name__ == "__main__":
     main()

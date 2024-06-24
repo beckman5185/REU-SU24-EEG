@@ -11,11 +11,15 @@ def RMS_similarity(x, y):
     sumSquares = 0
 
     for i in range(0, len(x)):
-        if abs(x[i]) - abs(y[i]) == 0:
-            print("Division by 0: " + str(x[i]) + "," + str(y[i]))
-        numSim = 1 - (abs(x[i] - y[i]) / (abs(x[i]) - abs(y[i])))
+        #numSim = 1
+        #if (abs(x[i]) - abs(y[i])) != 0:
+        numSim = 1 - (abs(x[i] - y[i]) / (abs(x[i]) + abs(y[i])))
+
+        print(numSim)
 
         sumSquares += numSim ** 2
+
+
 
     return np.sqrt(sumSquares/len(x))
 
@@ -77,9 +81,11 @@ def TS_Unfiltered():
     print(str(freqCosVal) + " in frequency domain")
 
     #Root mean square similarity measure
-    #RMSVal = RMS_similarity(Ch1, Ch9)
-    #freqRMSVal = RMS_similarity(freqCh1, freqCh9)
-    # print("RMS measure of similarity: " + str(RMSVal) + " in time domain, " + str(freqRMSVal) + " in frequency domain")
+    RMSVal = RMS_similarity(Ch1, Ch9)
+    freqRMSVal = RMS_similarity(freqCh1, freqCh9)
+    print("RMS measure of similarity: ")
+    print(str(RMSVal) + " in time domain")
+    print(str(freqRMSVal) + " in frequency domain")
 
 
     #Peak similarity measure
