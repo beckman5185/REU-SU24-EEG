@@ -15,8 +15,6 @@ def RMS_similarity(x, y):
         #if (abs(x[i]) - abs(y[i])) != 0:
         numSim = 1 - (abs(x[i] - y[i]) / (abs(x[i]) + abs(y[i])))
 
-        print(numSim)
-
         sumSquares += numSim ** 2
 
 
@@ -61,7 +59,7 @@ def LCS_similarity(X, Y):
 
 
 def TS_Unfiltered():
-    directory = r"Nature Raw Txt"
+    directory = r"../Nature Raw Txt"
     EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
 
 

@@ -83,7 +83,7 @@ def LCS(A, B, error):
 
 
 def main():
-    directory = r"Nature Raw Txt"
+    directory = r"../Nature Raw Txt"
     EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
 
     Ch1 = EEGdata[0]

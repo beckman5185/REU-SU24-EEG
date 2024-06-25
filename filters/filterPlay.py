@@ -321,9 +321,9 @@ def tryFilterNoGraphs():
 
 
 if __name__ == "__main__":
-    #rawFreqPlots()
+    rawFreqPlots()
     #rawTimePlots()
-    filterCompare()
+    #filterCompare()
     #finalFilter()
     #tryFilter()
     #tryFilterNoGraphs()
