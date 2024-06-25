@@ -100,11 +100,6 @@ def getError(ChA, ChB, isTimeSeries):
 
     return mean/10
 
-def LCS_similarity(ChA, ChB, isTimeSeries):
-
-    error = getError(ChA, ChB, isTimeSeries)
-    LCS_sequence = LCS(ChA, ChB, error)
-    return len(LCS_sequence)/len(ChA)
 
 
 def main():

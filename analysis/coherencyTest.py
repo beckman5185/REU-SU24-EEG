@@ -3,43 +3,31 @@ import numpy as np
 import scipy.fft
 from scipy.spatial.distance import euclidean
 from fastdtw import fastdtw
-from hs import LCS_similarity, getError
+from hs import LCS, getError
+from coherencyHelper import *
+
+def cosine_similarity(ChA, ChB, freqChA, freqChB):
+    return cos_helper(ChA, ChB), cos_helper(freqChA, freqChB)
+
+def RMS_similarity(ChA, ChB, freqChA, freqChB):
+    return RMS_helper(ChA, ChB), RMS_helper(freqChA, freqChB)
+
+def peak_similarity(ChA, ChB, freqChA, freqChB):
+    return peak_helper(ChA, ChB), peak_helper(freqChA, freqChB)
+
+def SSD_similarity(ChA, ChB, freqChA, freqChB):
+    return SSD_helper(ChA, ChB), SSD_helper(freqChA, freqChB)
 
 
-def cosine_similarity(x, y):
-    return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
-def RMS_similarity(x, y):
-
-    sumSquares = 0
-
-    for i in range(0, len(x)):
-        #numSim = 1
-        #if (abs(x[i]) - abs(y[i])) != 0:
-        numSim = 1 - (abs(x[i] - y[i]) / (abs(x[i]) + abs(y[i])))
-
-        sumSquares += numSim ** 2
-
-
-
-    return np.sqrt(sumSquares/len(x))
-
-def peak_similarity(x, y):
-
-    sumVal = 0
-    for i in range (0, len(x)):
-        sumVal += 1 - (abs(x[i] - y[i])/(2*max([abs(x[i]), abs(y[i])])))
-
-    return sumVal/len(x)
-
-
-def SSD_similarity(x, y):
-    return sum((x-y)**2)
-
-
-def DTW_similarity(ChA, ChB):
+def DTW_similarity(ChA, ChB, freqChA, freqChB):
     distance, path = fastdtw(np.array([ChA.values]), np.array([ChB.values]), dist=euclidean)
-    return distance
+    return distance, None
 
+def LCS_similarity(ChA, ChB, freqChA, freqChB):
+    error = getError(ChA, ChB, True)
+    time_LCS = len(LCS(ChA, ChB, error))/len(ChA)
+    freq_LCS = len(LCS(freqChA, freqChB, error))/len(freqChA)
+    return time_LCS, freq_LCS
 
 
 def coherencyMethods(ChA, ChB):
@@ -59,19 +47,7 @@ def coherencyMethods(ChA, ChB):
         function = functionTable[i]
         index = coherencyTable.index[i]
 
-        timeVal, freqVal = None, None
-
-        if (index!='LCS'):
-            #Get time and frequency coherency values for given function and channels
-            timeVal = function(ChA, ChB)
-            #DTW can't be calculated in frequency domain
-            if (index != 'DTW'):
-                freqVal = function(freqChA, freqChB)
-        else:
-            #LCS takes special third parameter
-            timeVal = function(ChA, ChB, True)
-            freqVal = function(freqChA, freqChB, False)
-
+        timeVal, freqVal = function(ChA, ChB, freqChA, freqChB)
 
         coherencyTable.loc[index, 'time'] = timeVal
         coherencyTable.loc[index, 'frequency'] = freqVal
