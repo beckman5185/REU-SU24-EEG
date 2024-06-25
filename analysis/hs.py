@@ -80,6 +80,31 @@ def LCS(A, B, error):
         v[k] = A[v[k][0]-1]
     return v
 
+def getError(ChA, ChB, isTimeSeries):
+    if isTimeSeries:
+        freqChA = scipy.fft.fft(ChA.values)
+        freqChB = scipy.fft.fft(ChB.values)
+    else:
+        freqChA = ChA
+        freqChB = ChB
+
+    #getting average of alpha frequency band
+    low = 8*60
+    high = 13*60
+    sum = 0
+    for i in range (low, high):
+        sum += freqChA[i] + freqChB[i]
+
+    #getting error from mean of alpha frequency band
+    mean = sum/(len(freqChA)+len(freqChB))
+
+    return mean/10
+
+def LCS_similarity(ChA, ChB, isTimeSeries):
+
+    error = getError(ChA, ChB, isTimeSeries)
+    LCS_sequence = LCS(ChA, ChB, error)
+    return len(LCS_sequence)/len(ChA)
 
 
 def main():
@@ -88,20 +113,10 @@ def main():
 
     Ch1 = EEGdata[0]
     Ch9 = EEGdata[8]
-
     freqCh1 = scipy.fft.fft(Ch1.values)
     freqCh9 = scipy.fft.fft(Ch9.values)
 
-    #getting average of alpha frequency band
-    low = 8*60
-    high = 13*60
-    sum = 0
-    for i in range (low, high):
-        sum += freqCh1[i]
-
-    #getting error from mean of alpha frequency band
-    mean = sum/len(freqCh1)
-    error = mean/10
+    error = getError(Ch1, Ch9, True)
 
     lcs = LCS(Ch1, Ch9, error)
     freqLCS = LCS(freqCh1, freqCh9, error)

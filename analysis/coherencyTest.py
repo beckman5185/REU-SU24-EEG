@@ -3,6 +3,8 @@ import numpy as np
 import scipy.fft
 from scipy.spatial.distance import euclidean
 from fastdtw import fastdtw
+from hs import LCS_similarity, getError
+
 
 def cosine_similarity(x, y):
     return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
@@ -34,83 +36,74 @@ def SSD_similarity(x, y):
     return sum((x-y)**2)
 
 
-def LCS_similarity(X, Y):
-    # find the length of the strings
-    m = len(X)
-    n = len(Y)
-
-    # declaring the array for storing the dp values
-    L = [[None] * (n + 1) for i in range(m + 1)]
-
-    """Following steps build L[m + 1][n + 1] in bottom up fashion 
-    Note: L[i][j] contains length of LCS of X[0..i-1] 
-    and Y[0..j-1]"""
-    for i in range(m + 1):
-        for j in range(n + 1):
-            if i == 0 or j == 0:
-                L[i][j] = 0
-            elif X[i - 1] == Y[j - 1]:
-                L[i][j] = L[i - 1][j - 1] + 1
-            else:
-                L[i][j] = max(L[i - 1][j], L[i][j - 1])
-
-                # L[m][n] contains the length of LCS of X[0..n-1] & Y[0..m-1]
-    return L[m][n]
+def DTW_similarity(ChA, ChB):
+    distance, path = fastdtw(np.array([ChA.values]), np.array([ChB.values]), dist=euclidean)
+    return distance
 
 
-def TS_Unfiltered():
+
+def coherencyMethods(ChA, ChB):
+
+    functionIndex = ['cos', 'RMS', 'peak', 'SSD', 'DTW', 'LCS']
+    domainIndex = ['time', 'frequency']
+    coherencyTable = pd.DataFrame(index=functionIndex, columns=domainIndex)
+
+    freqChA = scipy.fft.fft(ChA.values)
+    freqChB = scipy.fft.fft(ChB.values)
+
+    #Make a function table for all functions being called
+    functionTable = [cosine_similarity, RMS_similarity, peak_similarity, SSD_similarity, DTW_similarity, LCS_similarity]
+
+    #Loop through matching indices and functions
+    for i in range (0, len(functionTable)):
+        function = functionTable[i]
+        index = coherencyTable.index[i]
+
+        timeVal, freqVal = None, None
+
+        if (index!='LCS'):
+            #Get time and frequency coherency values for given function and channels
+            timeVal = function(ChA, ChB)
+            #DTW can't be calculated in frequency domain
+            if (index != 'DTW'):
+                freqVal = function(freqChA, freqChB)
+        else:
+            #LCS takes special third parameter
+            timeVal = function(ChA, ChB, True)
+            freqVal = function(freqChA, freqChB, False)
+
+
+        coherencyTable.loc[index, 'time'] = timeVal
+        coherencyTable.loc[index, 'frequency'] = freqVal
+
+    return coherencyTable
+
+
+
+
+
+def main():
     directory = r"../Nature Raw Txt"
     EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
+    EEGdata = EEGdata.drop(columns=[16], axis=1)
+
+
+    analysisChannels = [(1, 9), (2, 10), (6, 14), (7, 15), (8, 16), (3, 11), (4, 12), (5, 13)]
 
 
 
-    Ch1 = EEGdata[0]
-    Ch9 = EEGdata[8]
+    for pair in analysisChannels:
+        print("COHERENCY MEASURES FOR CHANNELS " + str(pair[0]) + " AND " + str(pair[1]))
 
-    freqCh1 = scipy.fft.fft(Ch1.values)
-    freqCh9 = scipy.fft.fft(Ch9.values)
+        indexA, indexB = pair[0]-1, pair[1]-1
+        ChA, ChB = EEGdata[indexA], EEGdata[indexB]
 
+        coherencyTable = coherencyMethods(ChA, ChB)
 
-    #Cosine similarity measure
-    cosVal = cosine_similarity(Ch1, Ch9)
-    freqCosVal = cosine_similarity(freqCh1, freqCh9)
-    print("Cos measure of similarity: ")
-    print(str(cosVal) + " in time domain")
-    print(str(freqCosVal) + " in frequency domain")
+        print(coherencyTable)
+        print()
 
-    #Root mean square similarity measure
-    RMSVal = RMS_similarity(Ch1, Ch9)
-    freqRMSVal = RMS_similarity(freqCh1, freqCh9)
-    print("RMS measure of similarity: ")
-    print(str(RMSVal) + " in time domain")
-    print(str(freqRMSVal) + " in frequency domain")
-
-
-    #Peak similarity measure
-    peakVal = peak_similarity(Ch1, Ch9)
-    freqPeakVal = peak_similarity(freqCh1, freqCh9)
-    print("Peak measure of similarity: ")
-    print(str(peakVal) + " in time domain")
-    print(str(freqPeakVal) + " in frequency domain")
-
-    #Sum of squared differences similarity measure
-    SSDVal = SSD_similarity(Ch1, Ch9)
-    freqSSDVal = SSD_similarity(freqCh1, freqCh9)
-    print("SSD measure of similarity: ")
-    print(str(SSDVal) + " in time domain")
-    print(str(freqSSDVal) + " in frequency domain")
-
-    #Need to figure out dynamic time warping - casting to real?
-    distance, path = fastdtw(np.array([Ch1.values]), np.array([Ch9.values]), dist=euclidean)
-    freqDistance, freqPath = fastdtw(np.array([freqCh1]), np.array([freqCh9]), dist=euclidean)
-    print("DTW measure of similarity: ")
-    print(str(distance) + " in time domain")
-    print(str(freqDistance) + " in frequency domain")
-
-    #See other file for Hunt Syzmanski algorithm
-    #LCSVal = LCS_similarity(Ch1, Ch9)
-    #print("LCS measure of similarity: " + str(LCSVal))
 
 
 if __name__ == "__main__":
-    TS_Unfiltered()
+    main()
