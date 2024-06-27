@@ -5,6 +5,7 @@ from scipy.spatial.distance import euclidean
 from fastdtw import fastdtw
 from hs import LCS, getError
 from coherencyHelper import *
+import os
 
 def cosine_similarity(ChA, ChB, freqChA, freqChB):
     return cos_helper(ChA, ChB), cos_helper(freqChA, freqChB)
@@ -24,7 +25,7 @@ def DTW_similarity(ChA, ChB, freqChA, freqChB):
     return distance, None
 
 def LCS_similarity(ChA, ChB, freqChA, freqChB):
-    error = getError(ChA, ChB, True)
+    error = getError(freqChA, freqChB)
     time_LCS = len(LCS(ChA, ChB, error))/len(ChA)
     freq_LCS = len(LCS(freqChA, freqChB, error))/len(freqChA)
     return time_LCS, freq_LCS
@@ -55,29 +56,29 @@ def coherencyMethods(ChA, ChB):
     return coherencyTable
 
 
+def doAnalysis(data, pairList):
+    for pair in pairList:
+        print("COHERENCY MEASURES FOR CHANNELS " + str(pair[0]) + " AND " + str(pair[1]))
 
+        indexA, indexB = pair[0]-1, pair[1]-1
+        seriesA, seriesB = data[indexA], data[indexB]
+
+        coherencyTable = coherencyMethods(seriesA, seriesB)
+
+        print(coherencyTable)
+        print()
 
 
 def main():
     directory = r"../Nature Raw Txt"
-    EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
-    EEGdata = EEGdata.drop(columns=[16], axis=1)
+    for file in os.listdir(directory):
+        EEGdata = pd.read_csv(directory + "/" + file, header=None)
+        EEGdata = EEGdata.drop(columns=[16], axis=1)
+        analysisChannels = [(1, 9), (2, 10), (6, 14), (7, 15), (8, 16), (3, 11), (4, 12), (5, 13)]
 
-
-    analysisChannels = [(1, 9), (2, 10), (6, 14), (7, 15), (8, 16), (3, 11), (4, 12), (5, 13)]
-
-
-
-    for pair in analysisChannels:
-        print("COHERENCY MEASURES FOR CHANNELS " + str(pair[0]) + " AND " + str(pair[1]))
-
-        indexA, indexB = pair[0]-1, pair[1]-1
-        ChA, ChB = EEGdata[indexA], EEGdata[indexB]
-
-        coherencyTable = coherencyMethods(ChA, ChB)
-
-        print(coherencyTable)
+        print("COHERENCY FOR " + str(file))
         print()
+        doAnalysis(EEGdata, analysisChannels)
 
 
 

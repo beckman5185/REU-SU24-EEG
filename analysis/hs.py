@@ -80,25 +80,27 @@ def LCS(A, B, error):
         v[k] = A[v[k][0]-1]
     return v
 
-def getError(ChA, ChB, isTimeSeries):
-    if isTimeSeries:
-        freqChA = scipy.fft.fft(ChA.values)
-        freqChB = scipy.fft.fft(ChB.values)
-    else:
-        freqChA = ChA
-        freqChB = ChB
+def getError(ChA, ChB):
+    #assuming data is passed in as frequency domain
 
     #getting average of alpha frequency band
     low = 8*60
     high = 13*60
-    sum = 0
-    for i in range (low, high):
-        sum += freqChA[i] + freqChB[i]
+    #sum = 0
+    #for i in range (low, high):
+    #    sum += ChA[i] + ChB[i]
+
+    series = (ChA + ChB)[low:high]
 
     #getting error from mean of alpha frequency band
-    mean = sum/(len(freqChA)+len(freqChB))
+    #mean = sum/(high-low)/2
 
-    return mean/10
+    #print(mean)
+    #print(np.mean(series)/2)
+    #tenthMean =
+
+    #twice length, tenth of mean
+    return np.mean(series)/20
 
 
 

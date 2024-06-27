@@ -8,21 +8,34 @@ def cos_helper(x, y):
     return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
 
 def RMS_helper(x, y):
-    sumSquares = 0
+    series = [None] * len(x)
 
     for i in range(0, len(x)):
-        numSim = 1 - (abs(x[i] - y[i]) / (abs(x[i]) + abs(y[i])))
-        sumSquares += numSim ** 2
+        num1 = x[i]
+        num2 = y[i]
+        if (num1 != 0 or num2 != 0):
+            series[i] = (1 - (abs(num1 - num2) / (abs(num1) + abs(num2)))) ** 2
+        else:
+            # if x[i] and y[i] are 0, special case (assume 0 to avoid division by 0)
+            series[i] = 1
 
-    return np.sqrt(sumSquares/len(x))
+    return np.sqrt(np.mean(series))
 
 
 def peak_helper(x, y):
-    sumVal = 0
-    for i in range (0, len(x)):
-        sumVal += 1 - (abs(x[i] - y[i])/(2*max([abs(x[i]), abs(y[i])])))
+    series = [None] * len(x)
 
-    return sumVal/len(x)
+    for i in range (0, len(x)):
+        num1 = x[i]
+        num2 = y[i]
+        if (num1 != 0 or num2 != 0):
+            series[i] = 1 - (abs(num1 - num2)/(2*max([abs(num1), abs(num2)])))
+        else:
+            # if x[i] and y[i] are 0, special case (assume 0 to avoid division by 0)
+            series[i] = 1
+
+
+    return np.mean(series)
 
 
 def SSD_helper(x, y):

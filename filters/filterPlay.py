@@ -7,7 +7,7 @@ plt.rcParams.update({'font.size': 20})
 
 
 def rawFreqPlots():
-    directory = r"Nature Raw Txt"
+    directory = r"../Nature Raw Txt"
     EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
     EEGdata = EEGdata.drop(columns=[16], axis=1)
 
@@ -129,7 +129,7 @@ def filterCompare():
 
 
 def finalFilter():
-
+    samplingFreq = 500
     numtaps2 =  200
     cutoff1 = 40
 
@@ -163,7 +163,7 @@ def rawTimePlots():
 
     #Data for plotting
     t = np.arange(0.0, 60.002, 0.002)
-    s = pd.Series(EEGdata[0]).values / 2
+    s = pd.Series(EEGdata[0]).values
 
     fig, ax = plt.subplots()
 
@@ -239,7 +239,7 @@ def tryFilter():
         x[i] = i / 500.0
 
     # not sure what units original EEG data are in?
-    h = filteredData / 500 # to convert it to volts?
+    h = filteredData
     plt.plot(x, abs(h))
 
     plt.xlabel('Frequency (Hz)')
@@ -264,7 +264,7 @@ def tryFilter():
 
     # Data for plotting
     t = np.arange(0.0, 60.002, 0.002)
-    s = timeFiltered / 1000
+    s = timeFiltered
 
 
     fig, ax = plt.subplots()
@@ -322,7 +322,7 @@ def tryFilterNoGraphs():
 
 if __name__ == "__main__":
     rawFreqPlots()
-    #rawTimePlots()
+    rawTimePlots()
     #filterCompare()
     #finalFilter()
     #tryFilter()
