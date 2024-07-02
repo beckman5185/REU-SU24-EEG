@@ -84,13 +84,13 @@ def getError(ChA, ChB):
     #assuming data is passed in as frequency domain
 
     #getting average of alpha frequency band
-    low = 8*60
-    high = 13*60
+    #low = 8*60
+    #high = 13*60
     #sum = 0
     #for i in range (low, high):
     #    sum += ChA[i] + ChB[i]
 
-    series = (ChA + ChB)[low:high]
+    series = (ChA + ChB)
 
     #getting error from mean of alpha frequency band
     #mean = sum/(high-low)/2

@@ -22,24 +22,25 @@ def rawFreqPlots():
     #x value is frequency, 60 sec at 500Hz
     x = [None] * 30001
     for i in range (0, 30001):
-        x[i] = i / 60.0
+        x[i] = (i / 60.0) - 500 //2
 
 
     #Plotting Ch1 and Ch9 data on same graph
-    h = freqCh1
-    plt.plot(x, abs(h), label="Fp1, Channel 1")
-    h = freqCh9
-    plt.plot(x, abs(h), label="Fp2, Channel 2")
+    h = np.fft.fftshift(freqCh1)
+
+    plt.plot(x, abs(h))#, label="Fp1, Channel 1")
+    #h = freqCh9
+    #plt.plot(x, abs(h), label="Fp2, Channel 2")
 
     #show alpha band only
-    plt.xlim(8, 13)
+    #plt.xlim(8, 13)
 
     #graph labels
     plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Wave Amplitude (microV)')
-    plt.title('EEG Data in Frequency Domain (unfiltered)')
-    plt.legend(shadow=True, framealpha=1)
-    plt.ylim(0, 60000)
+    plt.ylabel('Wave Amplitude (V)')
+    plt.title('EEG Data in Frequency Domain (unfiltered, shifted)')
+    #plt.legend(shadow=True, framealpha=1)
+    #plt.ylim(0, 60000)
     plt.show()
 
 
@@ -322,7 +323,7 @@ def tryFilterNoGraphs():
 
 if __name__ == "__main__":
     rawFreqPlots()
-    rawTimePlots()
+    #rawTimePlots()
     #filterCompare()
     #finalFilter()
     #tryFilter()

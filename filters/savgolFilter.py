@@ -103,7 +103,7 @@ def plotBothFreq(channelData, filteredData):
     plt.ylabel('Wave Amplitude (V)')
     plt.title('EEG Data in Frequency Domain: Filtered vs. Unfiltered')
     plt.legend(shadow=True, framealpha=1)
-    plt.ylim(0, 20000)
+    plt.ylim(0, 50000)
     plt.show()
 
 
@@ -150,8 +150,8 @@ def powerSpectrum(ChA):
     #X_smooth_1 = scipy.signal.savgol_filter(filteredData, 20, 15)
     X_smooth_1 = scipy.signal.savgol_filter(ChA, w, polyorder=p, deriv=0)
     X_smooth_2 = scipy.signal.savgol_filter(ChA, 2 * w + 1, polyorder=p, deriv=0)
-    #X_smooth_3 = scipy.signal.savgol_filter(ChA, 15, 5)
-    X_smooth_3 = scipy.signal.lfilter(hammingCoeffs, denoms, ChA)
+    X_smooth_3 = scipy.signal.savgol_filter(ChA, 20, 4)
+    #X_smooth_3 = scipy.signal.lfilter(hammingCoeffs, denoms, ChA)
     #X_smooth_3 = scipy.signal.savgol_filter(ChA, 4 * w + 1, polyorder=3 * p, deriv=0)
 
     # Calculate the power spectra in a featureless region
@@ -168,9 +168,9 @@ def powerSpectrum(ChA):
     plt.figure(figsize=(10, 8))
     with plt.style.context(('ggplot')):
         plt.semilogy(fpix, ps, 'b', label='No smoothing')
-        plt.semilogy(fpix, ps_1, 'r', label='Smoothing: w/p = 2.5')
-        plt.semilogy(fpix, ps_2, 'g', label='Smoothing: w/p = 5.5')
-        plt.semilogy(fpix, ps_3, 'm', label='Smoothing: w/p = 3.5')
+        #plt.semilogy(fpix, ps_1, 'r', label='Smoothing: w/p = 2.5')
+        #plt.semilogy(fpix, ps_2, 'g', label='Smoothing: w/p = 5.5')
+        plt.semilogy(fpix, ps_3, 'm', label='Smoothing: w=15, p=5')
         plt.legend()
         plt.xlabel('Frequency (Hz)')
 
@@ -201,5 +201,5 @@ def main(length, order):
 
 
 if __name__ == "__main__":
-    main(20, 4)
+    main(15, 5)
 

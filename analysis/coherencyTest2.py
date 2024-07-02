@@ -118,16 +118,16 @@ def main(sound, function, timeDomain, filtered):
     print("Sound: " + sound)
     print("Method of analysis: " + function.__name__)
 
-    directory = r"excel-output//" + function.__name__
-    filename = directory + "//" + sound + "_" + function.__name__ + "_"
-    if timeDomain:
-        filename += "time_"
-    else: filename += "frequency_"
-    if filtered:
-        filename += "filtered.xlsx"
-    else:
-        filename += "unfiltered.xlsx"
-    timeAnalysisTable.to_excel(filename)
+    #directory = r"time-filtered-output//" + function.__name__
+    #filename = directory + "//" + sound + "_" + function.__name__ + "_"
+    #if timeDomain:
+    #    filename += "time_"
+    #else: filename += "frequency_"
+    #if filtered:
+    #    filename += "filtered.xlsx"
+    #else:
+    #    filename += "unfiltered.xlsx"
+    #timeAnalysisTable.to_excel(filename)
 
 def comp(sound, function, timeDomain):
 
