@@ -36,32 +36,45 @@ def LCS_similarity(ChA, ChB, timeDomain):
         #freqChB = scipy.fft.fft(ChB)
 
         #get power spectrum
-        freqChA = np.abs(scipy.fft.fft(ChA)) ** 2
-        freqChB = np.abs(scipy.fft.fft(ChB)) ** 2
+        #freqChA = np.abs(scipy.fft.fft(ChA)) ** 2
+        #freqChB = np.abs(scipy.fft.fft(ChB)) ** 2
 
         # getting just alpha band
-        low, high = 8, 13
-        scale = 30000 / 500
-        low_idx, high_idx = int(low * scale), int(high * scale)
-        freqChA = freqChA[low_idx:high_idx]
-        freqChB = freqChB[low_idx:high_idx]
+        #low, high = 8, 13
+        #scale = 30000 / 500
+        #low_idx, high_idx = int(low * scale), int(high * scale)
+        #freqChA = freqChA[low_idx:high_idx]
+        #freqChB = freqChB[low_idx:high_idx]
 
-        error = abs(getError(freqChA, freqChB))
-    else:
+        #error = abs(getError(freqChA, freqChB))
+
+        #error is 1/10th mean of the two series
         error = abs(getError(ChA, ChB))
-    return len(LCS(ChA, ChB, error))/len(ChA)
+    else:
+        #error is 1/10th mean of power spectrum of alpha band
+        error = abs(getError(ChA, ChB))
+
+    #get length of longest common subsequence relative to vector length
+    length = len(LCS(ChA, ChB, error))
+    relativeLength = length/len(ChA)
+
+    return relativeLength
 
 
 
 def doAnalysis(data, function, timeDomain, filtered):
 
+    #channels under analysis
     analysisChannels = [(1, 9), (2, 10), (6, 14), (7, 15), (8, 16), (3, 11), (4, 12), (5, 13)]
     channelIndex = ['Fp1-Fp2', 'F3-F4', 'F7-F8', 'T3-T4', 'T5-T6', 'C3-C4', 'P3-P4', 'O1-O2']
 
+    #storing one coherency value for each channel pair
     coherencySeries = pd.Series(index=channelIndex)
 
+    #loop over all channel pairs
     for i in range(0, len(analysisChannels)):
 
+        #get channels to analyze from current pair
         channelName = channelIndex[i]
         indexA, indexB = analysisChannels[i][0] - 1, analysisChannels[i][1] - 1
         seriesA, seriesB = data[indexA].values, data[indexB].values
@@ -69,8 +82,11 @@ def doAnalysis(data, function, timeDomain, filtered):
         #need to apply filter before converting to frequency domain
         #savgol implementation casts all values to real, losing imaginary parts of frequency
         if(filtered):
+            #apply Savitzky-Golay filter to data
             seriesA = scipy.signal.savgol_filter(seriesA, 15, 5)
             seriesB = scipy.signal.savgol_filter(seriesB, 15, 5)
+
+            #apply bandpass filter to data
             '''
             numtaps1 = 200
             cutoff1 = [1, 40]
@@ -108,17 +124,23 @@ def doAnalysis(data, function, timeDomain, filtered):
             seriesB = seriesB[low_idx:high_idx]
 
 
+        #get coherency value for current channel pair
         coherencySeries[channelName] = function(seriesA, seriesB, timeDomain)
 
 
     return coherencySeries
+
+
+
 def generateTable(timeDomain, filtered):
+    #list of channels under analysis and methods of analysis
     channelIndex = ['Fp1-Fp2', 'F3-F4', 'F7-F8', 'T3-T4', 'T5-T6', 'C3-C4', 'P3-P4', 'O1-O2']
-    soundIndex = ['N2', 'N3', 'N4', 'N5', 'N6', 'N8']
     methodList = [cosine_similarity, RMS_similarity, peak_similarity, SSD_similarity, DTW_similarity, LCS_similarity]
 
+    #variables stored in output table
     tableIndex = ['Subject', 'Gender', 'Sound', 'Coherency']
 
+    #pair table list has dataframes for output for each channel pair for each method of analysis
     pairTableList = [None] * len(methodList)
     for i in range(len(pairTableList)):
         pairTableList[i] = [None] * len(channelIndex)
@@ -126,34 +148,42 @@ def generateTable(timeDomain, filtered):
             pairTableList[i][j] = pd.DataFrame(columns=tableIndex)
 
 
+    #looking into folder with data
     directory = r"../Nature Raw Txt"
     for file in os.listdir(directory):
+        #get sound and last name from file name
         soundName = file.split('_')[-1].strip('.txt')
         lastName = file.split('_')[0]
 
+
+        #assign gender by last name of subject (if found)
         gender = None
-        maleList = ['Barb', 'Ford', 'Helmick', 'Stewart', 'White', 'Carr', 'Washington', 'Harris', 'Marin', 'Stevens', 'Carey', 'MoneyPenny', 'DeVaul', 'Lough']
-        femaleList = ['Farley', 'Paushel', 'Forbes', 'Harper', 'Barr', 'Ball', 'Robin', 'Ball2', 'Prickett', 'Pryor', 'Collins', 'Shingleton', 'Jackson', 'Hartman', 'Beach', 'Uphold', 'Bucklew', 'Chenoweth', 'Winsten', 'Queen', 'Loss', 'Nestor', 'Bradley', 'Koveski', 'Coen', 'Massangale']
-
-
+        maleList = ['Barb', 'Ford', 'Helmick', 'Stewart', 'White', 'Carr', 'Washington', 'Harris', 'Marin', 'Stevens',
+                    'Carey', 'MoneyPenny', 'DeVaul', 'Lough']
+        femaleList = ['Farley', 'Paushel', 'Forbes', 'Harper', 'Barr', 'Ball', 'Robin', 'Ball2', 'Prickett', 'Pryor',
+                      'Collins', 'Shingleton', 'Jackson', 'Hartman', 'Beach', 'Uphold', 'Bucklew', 'Chenoweth',
+                      'Winsten', 'Queen', 'Loss', 'Nestor', 'Bradley', 'Koveski', 'Coen', 'Massangale']
         if lastName in maleList:
             gender = 'M'
         elif lastName in femaleList:
             gender = 'F'
 
 
+        #read in EEG data
         EEGdata = pd.read_csv(directory + "/" + file, header=None)
         EEGdata = EEGdata.drop(columns=[16], axis=1)
 
-
+        #do analysis for each method
         for i in range(len(methodList)):
             coherencySeries = doAnalysis(EEGdata, methodList[i], timeDomain, filtered)
 
+            #for each channel pair, insert coherency results into pair list table
             for j in range (0, len(channelIndex)):
                 row = pd.Series([lastName, gender, soundName, coherencySeries.iloc[j]], index=tableIndex)
                 pairTableList[i][j] = pairTableList[i][j]._append(row, ignore_index=True)
 
 
+    #for each table in pair table list, print output to file in relevant directory
     for i in range (len(methodList)):
         for j in range (len(channelIndex)):
             filename = "//" + channelIndex[j] + ".csv"
@@ -167,14 +197,13 @@ def generateTable(timeDomain, filtered):
                 directory2 = r"frequency-unfiltered-output//" + methodList[i].__name__
 
             pairTableList[i][j].to_csv(directory2 + filename)
-            print(filename)
 
 
 def generateAll():
     timeList = [True, False]
     filterList = [True, False]
 
-    generateTable(False, True)
+    generateTable(False, False)
 
     #for time in timeList:
         #for filter in filterList:
