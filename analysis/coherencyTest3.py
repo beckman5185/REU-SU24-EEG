@@ -62,7 +62,7 @@ def LCS_similarity(ChA, ChB, timeDomain):
 
 
 
-def doAnalysis(data, function, timeDomain, filtered):
+def doAnalysis(data, function, timeDomain, alpha, filtered):
 
     #channels under analysis
     analysisChannels = [(1, 9), (2, 10), (6, 14), (7, 15), (8, 16), (3, 11), (4, 12), (5, 13)]
@@ -117,7 +117,10 @@ def doAnalysis(data, function, timeDomain, filtered):
             #seriesB = scipy.fft.fft(seriesB)
 
             #getting just alpha band
-            low, high = 8, 13
+            if alpha:
+                low, high = 8, 13
+            else:
+                low, high = 35, 44
             scale = 30000 / 500
             low_idx, high_idx = int(low * scale), int(high * scale)
             seriesA = seriesA[low_idx:high_idx]
@@ -132,7 +135,7 @@ def doAnalysis(data, function, timeDomain, filtered):
 
 
 
-def generateTable(timeDomain, filtered):
+def generateTable(timeDomain, alpha, filtered):
     #list of channels under analysis and methods of analysis
     channelIndex = ['Fp1-Fp2', 'F3-F4', 'F7-F8', 'T3-T4', 'T5-T6', 'C3-C4', 'P3-P4', 'O1-O2']
     methodList = [cosine_similarity, RMS_similarity, peak_similarity, SSD_similarity, DTW_similarity, LCS_similarity]
@@ -146,6 +149,10 @@ def generateTable(timeDomain, filtered):
         pairTableList[i] = [None] * len(channelIndex)
         for j in range (0, len(channelIndex)):
             pairTableList[i][j] = pd.DataFrame(columns=tableIndex)
+    #pairTableList = pd.DataFrame(index=methodList, columns=channelIndex)
+    #for i in range(0, len(methodList)):
+    #    for j in range (0, len(channelIndex)):
+    #        pairTableList.iloc[i, j] = pd.DataFrame(columns=tableIndex)
 
 
     #looking into folder with data
@@ -175,7 +182,7 @@ def generateTable(timeDomain, filtered):
 
         #do analysis for each method
         for i in range(len(methodList)):
-            coherencySeries = doAnalysis(EEGdata, methodList[i], timeDomain, filtered)
+            coherencySeries = doAnalysis(EEGdata, methodList[i], timeDomain, alpha, filtered)
 
             #for each channel pair, insert coherency results into pair list table
             for j in range (0, len(channelIndex)):
@@ -183,18 +190,29 @@ def generateTable(timeDomain, filtered):
                 pairTableList[i][j] = pairTableList[i][j]._append(row, ignore_index=True)
 
 
+                #row = pd.DataFrame([[lastName, gender, soundName, coherencySeries.iloc[j]]], columns=tableIndex)
+                #row = {tableIndex[0]:lastName, tableIndex[1]:gender, tableIndex[2]:soundName, tableIndex[3]:coherencySeries.iloc[j]}
+                #print(pairTableList.to_string())
+                #pairTableList.loc[len(pairTableList.index)] = [lastName, gender, soundName, coherencySeries.iloc[j]]
+                #pairTableList.iloc[i,j] = pd.concat([pairTableList.iloc[i, j], row])
+
+
+
     #for each table in pair table list, print output to file in relevant directory
     for i in range (len(methodList)):
         for j in range (len(channelIndex)):
             filename = "//" + channelIndex[j] + ".csv"
-            if timeDomain and filtered:
-                directory2 = r"time-filtered-output//" + methodList[i].__name__
-            elif timeDomain and not filtered:
-                directory2 = r"time-unfiltered-output//" + methodList[i].__name__
-            elif not timeDomain and filtered:
-                directory2 = r"frequency-filtered-output//" + methodList[i].__name__
+            if timeDomain:
+                directory2 = r"time-"
+            elif alpha:
+                directory2 = r"alpha-"
             else:
-                directory2 = r"frequency-unfiltered-output//" + methodList[i].__name__
+                directory2 = r"gamma-"
+
+            if filtered:
+                directory2 += r"filtered-output//" + methodList[i].__name__
+            else:
+                directory2 += r"unfiltered-output//" + methodList[i].__name__
 
             pairTableList[i][j].to_csv(directory2 + filename)
 
@@ -203,7 +221,10 @@ def generateAll():
     timeList = [True, False]
     filterList = [True, False]
 
-    generateTable(False, False)
+    #timeDomain: true is time, false is frequency
+    #alpha: true is alpha band, false is gamma band (only applicable if frequency)
+    #filtered: true is filtered, false is unfiltered
+    generateTable(False, False, False)
 
     #for time in timeList:
         #for filter in filterList:
