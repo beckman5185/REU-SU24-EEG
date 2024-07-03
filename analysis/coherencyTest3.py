@@ -60,6 +60,57 @@ def LCS_similarity(ChA, ChB, timeDomain):
 
     return relativeLength
 
+def filter(seriesA, seriesB, filtered):
+    if (filtered):
+        # apply Savitzky-Golay filter to data
+        seriesA = scipy.signal.savgol_filter(seriesA, 15, 5)
+        seriesB = scipy.signal.savgol_filter(seriesB, 15, 5)
+
+        # apply bandpass filter to data
+        '''
+        numtaps1 = 200
+        cutoff1 = [1, 40]
+        samplingFreq = 500
+        hammingCoeffs = scipy.signal.firwin(numtaps1, cutoff1, window='hamming', pass_zero='bandpass',
+                                            fs=samplingFreq)
+
+        denoms = [1] * len(hammingCoeffs)
+
+
+        seriesA = scipy.signal.lfilter(hammingCoeffs, denoms, seriesA)
+        seriesB = scipy.signal.lfilter(hammingCoeffs, denoms, seriesB)
+
+        seriesA = np.abs(scipy.fft.fft(seriesA)) ** 2
+        seriesB = np.abs(scipy.fft.fft(seriesB)) ** 2
+        '''
+
+    return seriesA, seriesB
+
+
+def frequency(seriesA, seriesB, timeDomain, alpha):
+    if (not timeDomain):
+        # getting power spectrum
+        seriesA = np.abs(scipy.fft.fft(seriesA)) ** 2
+        seriesB = np.abs(scipy.fft.fft(seriesB)) ** 2
+
+        # getting fourier transform
+        # seriesA = scipy.fft.fft(seriesA)
+        # seriesB = scipy.fft.fft(seriesB)
+
+        # getting just alpha band
+        if alpha:
+            low, high = 8, 13
+        else:
+        # getting just gamma band
+            low, high = 35, 44
+        scale = 30000 / 500
+        low_idx, high_idx = int(low * scale), int(high * scale)
+        seriesA = seriesA[low_idx:high_idx]
+        seriesB = seriesB[low_idx:high_idx]
+
+    return seriesA, seriesB
+
+
 
 
 def doAnalysis(data, function, timeDomain, alpha, filtered):
@@ -81,57 +132,30 @@ def doAnalysis(data, function, timeDomain, alpha, filtered):
 
         #need to apply filter before converting to frequency domain
         #savgol implementation casts all values to real, losing imaginary parts of frequency
-        if(filtered):
-            #apply Savitzky-Golay filter to data
-            seriesA = scipy.signal.savgol_filter(seriesA, 15, 5)
-            seriesB = scipy.signal.savgol_filter(seriesB, 15, 5)
-
-            #apply bandpass filter to data
-            '''
-            numtaps1 = 200
-            cutoff1 = [1, 40]
-            samplingFreq = 500
-            hammingCoeffs = scipy.signal.firwin(numtaps1, cutoff1, window='hamming', pass_zero='bandpass',
-                                                fs=samplingFreq)
-
-            denoms = [1] * len(hammingCoeffs)
-
-
-            seriesA = scipy.signal.lfilter(hammingCoeffs, denoms, seriesA)
-            seriesB = scipy.signal.lfilter(hammingCoeffs, denoms, seriesB)
-
-            seriesA = np.abs(scipy.fft.fft(seriesA)) ** 2
-            seriesB = np.abs(scipy.fft.fft(seriesB)) ** 2
-            '''
-
-
+        seriesA, seriesB = filter(seriesA, seriesB, filtered)
 
         #for frequency domain, get the power spectrum of the time series
-        if (not timeDomain):
-            #getting power spectrum
-            seriesA = np.abs(scipy.fft.fft(seriesA)) ** 2
-            seriesB = np.abs(scipy.fft.fft(seriesB)) ** 2
-
-            #getting fourier transform
-            #seriesA = scipy.fft.fft(seriesA)
-            #seriesB = scipy.fft.fft(seriesB)
-
-            #getting just alpha band
-            if alpha:
-                low, high = 8, 13
-            else:
-                low, high = 35, 44
-            scale = 30000 / 500
-            low_idx, high_idx = int(low * scale), int(high * scale)
-            seriesA = seriesA[low_idx:high_idx]
-            seriesB = seriesB[low_idx:high_idx]
-
+        seriesA, seriesB = frequency(seriesA, seriesB, timeDomain, alpha)
 
         #get coherency value for current channel pair
         coherencySeries[channelName] = function(seriesA, seriesB, timeDomain)
 
 
     return coherencySeries
+
+def getGender(lastName):
+    gender = None
+    maleList = ['Barb', 'Ford', 'Helmick', 'Stewart', 'White', 'Carr', 'Washington', 'Harris', 'Marin', 'Stevens',
+                'Carey', 'MoneyPenny', 'DeVaul', 'Lough']
+    femaleList = ['Farley', 'Paushel', 'Forbes', 'Harper', 'Barr', 'Ball', 'Robin', 'Ball2', 'Prickett', 'Pryor',
+                  'Collins', 'Shingleton', 'Jackson', 'Hartman', 'Beach', 'Uphold', 'Bucklew', 'Chenoweth',
+                  'Winsten', 'Queen', 'Loss', 'Nestor', 'Bradley', 'Koveski', 'Coen', 'Massangale']
+    if lastName in maleList:
+        gender = 'M'
+    elif lastName in femaleList:
+        gender = 'F'
+
+    return gender
 
 
 
@@ -158,22 +182,10 @@ def generateTable(timeDomain, alpha, filtered):
     #looking into folder with data
     directory = r"../Nature Raw Txt"
     for file in os.listdir(directory):
-        #get sound and last name from file name
+        #get sound and last name and gender of participant
         soundName = file.split('_')[-1].strip('.txt')
         lastName = file.split('_')[0]
-
-
-        #assign gender by last name of subject (if found)
-        gender = None
-        maleList = ['Barb', 'Ford', 'Helmick', 'Stewart', 'White', 'Carr', 'Washington', 'Harris', 'Marin', 'Stevens',
-                    'Carey', 'MoneyPenny', 'DeVaul', 'Lough']
-        femaleList = ['Farley', 'Paushel', 'Forbes', 'Harper', 'Barr', 'Ball', 'Robin', 'Ball2', 'Prickett', 'Pryor',
-                      'Collins', 'Shingleton', 'Jackson', 'Hartman', 'Beach', 'Uphold', 'Bucklew', 'Chenoweth',
-                      'Winsten', 'Queen', 'Loss', 'Nestor', 'Bradley', 'Koveski', 'Coen', 'Massangale']
-        if lastName in maleList:
-            gender = 'M'
-        elif lastName in femaleList:
-            gender = 'F'
+        gender = getGender(lastName)
 
 
         #read in EEG data
