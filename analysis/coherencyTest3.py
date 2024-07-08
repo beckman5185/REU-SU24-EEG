@@ -226,6 +226,9 @@ def generateTable(timeDomain, alpha, filtered):
             else:
                 directory2 += r"unfiltered-output//" + methodList[i].__name__
 
+            if not os.path.exists(directory2):
+                os.makedirs(directory2)
+
             pairTableList[i][j].to_csv(directory2 + filename)
 
 
