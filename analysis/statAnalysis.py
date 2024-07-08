@@ -66,7 +66,7 @@ def varRuleOfThumb(data1, data2):
 
 
 
-def t_test_bonferroni(coherenceData):
+def t_test_sound(coherenceData):
     soundIndex = 3
     coherenceIndex = 4
 
@@ -107,12 +107,57 @@ def t_test_bonferroni(coherenceData):
         significance = False
         if (p_value < corrected_alpha):
             significance = True
-            print("SIGNIFICANT RESULT:")
+            print("SIGNIFICANT RESULT (SOUND):")
             print("Pair: " + str(pair))
             print("P value: " + str(p_value))
 
 
 
+
+def t_test_gender(coherenceData):
+    genderIndex = 2
+    soundIndex = 3
+    coherenceIndex = 4
+
+    #initialize dict to store coherency values sorted by sound and gender
+    soundList = ['N2', 'N3', 'N4', 'N5', 'N6', 'N8']
+    soundDict = {}
+    for sound in soundList:
+        soundDict[sound] = {'F':[], 'M':[]}
+
+
+    #sort coherency data by sound and gender
+    for i in range (0, len(coherenceData.index)):
+        soundName = coherenceData.iloc[i, soundIndex]
+        coherence = coherenceData.iloc[i, coherenceIndex]
+        gender = coherenceData.iloc[i, genderIndex]
+
+        if gender in soundDict[soundName].keys():
+            soundDict[soundName][gender].append(coherence)
+
+
+    #Bonferroni correction for alpha value
+    alpha = 0.05
+    corrected_alpha = alpha / len(soundList)
+
+    #for each sound, perform a two-tailed two-sample t test with corrected alpha
+    for sound in soundList:
+        #get list of coherence values for given sound
+        Fsound, Msound = soundDict[sound]['F'], soundDict[sound]['M']
+
+        #equal variances determined by variance rule of thumb
+        equalVar = varRuleOfThumb(Fsound, Msound)
+
+        #calculate t statistic and p value
+        t_statistic, p_value = scipy.stats.ttest_ind(Fsound, Msound, equal_var=equalVar)
+
+        #evaluate significance with corrected alpha
+        significance = False
+        if (p_value < corrected_alpha):
+            significance = True
+            print("SIGNIFICANT RESULT (GENDER):")
+            print("Sound: " + sound)
+            print("P value: " + str(p_value))
 
 
 
@@ -159,9 +204,15 @@ def main():
                 #leveneResult = leveneTest(coherenceData)
 
                 #perform Tukey test
-                #rmanova, tukey = tukey(coherenceData)
+                #if leveneResult:
+                #   rmanova, tukey = tukey(coherenceData)
+                #else:
+                #    rmanova, tukey = None, None
 
-                t_test_bonferroni(coherenceData)
+                #significant results for gender
+                #no signficant results for sound
+                t_test_sound(coherenceData)
+                t_test_gender(coherenceData)
 
                 #filename = "sample4.txt"
                 #results = rmanova.to_string() + "\n" + "TUKEY:" + "\n" + str(tukey)
