@@ -5,6 +5,8 @@ import scipy.stats
 import itertools
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 import statistics
+from scikit_posthocs import posthoc_scheffe
+import numpy as np
 
 def leveneTest(dataset):
     #get index for gender and coherency
@@ -35,21 +37,17 @@ def leveneTest(dataset):
 
 
 
-def tukey(coherenceData, style, file, method):
-    # get mixed ANOVA for sounds and gender
-    rmanova = pg.mixed_anova(coherenceData, dv='Coherency', within='Sound', subject='Subject', between='Gender', correction=True)
+def tukey(rmanova, coherenceData):
+    tukey = pairwise_tukeyhsd(endog=coherenceData['Coherency'], groups=coherenceData['Sound'], alpha=0.05)
 
-    soundIndex = 1
-    interactionIndex = 2
-    sphericity = rmanova['sphericity'][soundIndex] == True
-    significance = rmanova['p-unc'][interactionIndex] <= 0.05
-    # significance2 = rmanova['p-unc'][interactionIndex] <= 0.05
-    tukey = None
+    return tukey
 
-    if sphericity and significance:
-        tukey = pairwise_tukeyhsd(endog=coherenceData['Coherency'], groups=coherenceData['Sound'], alpha=0.05)
 
-    return rmanova, tukey
+def scheffe(rmanova, coherenceData):
+
+    scheffe = posthoc_scheffe(coherenceData, val_col='Coherency', group_col='Sound')
+
+    return scheffe
 
 
 def varRuleOfThumb(data1, data2):
@@ -65,13 +63,12 @@ def varRuleOfThumb(data1, data2):
     return equalVar
 
 
-
-def t_test_sound(coherenceData):
+def sorted_sounds(soundList, coherenceData):
+    #establish indexes important to us
     soundIndex = 3
     coherenceIndex = 4
 
-    #initialize dict to store lists of coherency values sorted by sound
-    soundList = ['N2', 'N3', 'N4', 'N5', 'N6', 'N8']
+    #set up sound dict with empty list for each sound
     soundDict = {}
     for sound in soundList:
         soundDict[sound] = []
@@ -83,6 +80,15 @@ def t_test_sound(coherenceData):
         coherence = coherenceData.iloc[i, coherenceIndex]
 
         soundDict[soundName].append(coherence)
+
+    return soundDict
+
+
+def t_test_sound(coherenceData):
+
+    #initialize dict to store lists of coherency values sorted by sound
+    soundList = ['N2', 'N3', 'N4', 'N5', 'N6', 'N8']
+    soundDict = sorted_sounds(coherenceData, soundList)
 
 
     #find every combination of two sounds
@@ -161,6 +167,66 @@ def t_test_gender(coherenceData):
 
 
 
+def significance(rmanova):
+    soundIndex = 1
+    interactionIndex = 2
+    sphericity = rmanova['sphericity'][soundIndex] == True
+    significance = rmanova['p-unc'][soundIndex] <= 0.05
+    significance2 = rmanova['p-unc'][interactionIndex] <= 0.05
+
+    return sphericity and (significance or significance2)
+
+
+
+def fisher_lsd_test(rmanova, coherenceData):
+    #get t critical value for significance level and degrees of freedom within
+    alpha = 0.05
+    soundIndex = 1
+    df_within = rmanova.loc[soundIndex, 'DF2']
+    t_val = scipy.stats.t.ppf(1 - alpha/2, df_within)
+
+    #get mean square within
+    msw = rmanova.loc[soundIndex, 'MS']
+
+
+    #get number of samples in each group
+    numSounds = 6
+    n1 = len(coherenceData.index) / numSounds
+
+    #get fisher least significant difference
+    fisher_lsd = t_val * np.sqrt(msw * (n1 + n1))
+
+
+    #initialize dict to store lists of coherency values sorted by sound
+    soundList = ['N2', 'N3', 'N4', 'N5', 'N6', 'N8']
+    soundDict = sorted_sounds(soundList, coherenceData)
+
+    #get mean of coherency values for each sound
+    for sound in soundDict.keys():
+        group_mean = np.mean(soundDict[sound])
+        soundDict[sound] = group_mean
+
+    #find every combination of two sounds
+    combinations = list(itertools.combinations(soundList, 2))
+
+    #for each combination, find the mean difference and print if significant
+    for pair in combinations:
+        sound1, sound2 = pair[0], pair[1]
+        difference = np.abs(soundDict[sound1] - soundDict[sound2])
+
+        if difference > fisher_lsd:
+            with open('sample5.txt', "a") as f:
+                print ("LSD: " + str(fisher_lsd) + "\nDIFFERENCE: " + str(difference) + "\n", file=f)
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -201,45 +267,47 @@ def main():
                 coherenceData = pd.read_csv(directory + "/" + file, header=0)
 
                 #check that variance of between groups is similar
-                #leveneResult = leveneTest(coherenceData)
+                leveneResult = leveneTest(coherenceData)
 
                 #perform Tukey test
-                #if leveneResult:
-                #   rmanova, tukey = tukey(coherenceData)
-                #else:
-                #    rmanova, tukey = None, None
+                tukeyResult, scheffeResult = None, None
+                significant = False
+                if leveneResult:
+                    # get mixed ANOVA for sounds and gender
+                    rmanova = pg.mixed_anova(coherenceData, dv='Coherency', within='Sound', subject='Subject',
+                                             between='Gender', correction=True)
+
+                    significant = significance(rmanova)
+
+                    if (significant):
+                        #tukeyResult = tukey(rmanova, coherenceData)
+                        #scheffeResult = scheffe(rmanova, coherenceData)
+                        fisher_lsd_test(rmanova, coherenceData)
+
+                        filename = "sample4.txt"
+                        #results = rmanova.to_string() + "\n" + "TUKEY:" + "\n" + str(tukeyResult) + "\n" + "SCHEFFE: " + str(scheffeResult)
+                        #printResults(filename, style, file, methodList[i], results)
+
+
+
+
 
                 #significant results for gender
                 #no signficant results for sound
-                t_test_sound(coherenceData)
-                t_test_gender(coherenceData)
-
-                #filename = "sample4.txt"
-                #results = rmanova.to_string() + "\n" + "TUKEY:" + "\n" + str(tukey)
-                #printResults(filename, style, file, methodList[i], results):
+                #t_test_sound(coherenceData)
+                #t_test_gender(coherenceData)
 
 
+
+                #Fisher LSD test
 
 
 
 
-def test():
-    methodList = ['cosine_similarity', 'RMS_similarity', 'peak_similarity', 'SSD_similarity', 'DTW_similarity', 'LCS_similarity']
-    #methodList = ['cosine_similarity', 'RMS_similarity', 'peak_similarity', 'SSD_similarity', 'LCS_similarity']
-    paramsList = ['time-unfiltered-output', 'time-filtered-output', 'alpha-unfiltered-output', 'alpha-filtered-output']
-
-    style = paramsList[1]
 
 
-    with open("test.txt", "r") as file:
 
-        coherenceData = pd.read_csv(file, header=0)
-        rmanova = pg.mixed_anova(coherenceData, dv='Coherency', within='Sound', subject='Subject', between='Gender')
-        with open("test-" + style + ".txt", "a") as f:
-            print("Channel pair: C3-C4", file=f)
-            print("Method of analysis: LCS_similarity", file=f)
-            print(rmanova.to_string(), file=f)
-            print(file=f)
+
 
 
 if __name__ == "__main__":
