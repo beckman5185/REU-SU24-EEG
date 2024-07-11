@@ -37,11 +37,27 @@ def oneWaySignificance(rmanova):
     return sphericity and significance
 
 
-def runTests(significant, rmanova, coherenceData):
+def runTests(significant, rmanova, coherenceData, oneWay):
+    resultsString = ""
+
     if (significant):
-        tukeyResult = tukey(rmanova, coherenceData)
-        scheffeResult = scheffe(rmanova, coherenceData)
-        fisher_lsd_test(rmanova, coherenceData)
+        tukeyResult = tukey(coherenceData)
+        scheffeResult = scheffe(coherenceData)
+        fisherResult = fisher_lsd_test(rmanova, coherenceData, oneWay)
+
+        resultsString += "TUKEY: \n" + str(tukeyResult) + "\nSCHEFFE: \n" + str(scheffeResult) + "\nFISHER: \n" + fisherResult.to_string()
+
+
+    t_test_sound_results = t_test_sound(coherenceData)
+    resultsString += "\nT TEST (SOUND): \n" + t_test_sound_results.to_string()
+
+    if not oneWay:
+        t_test_gender_results = t_test_gender(coherenceData)
+        resultsString += "\nT TEST (GENDER): \n" + t_test_gender_results.to_string()
+
+    return resultsString
+
+
 
 
 
@@ -70,7 +86,7 @@ def doOneWayANOVA(coherenceData):
     F_rmanova = pg.rm_anova(FCoherenceData, dv='Coherency', within='Sound', subject='Subject', correction=True)
     M_rmanova = pg.rm_anova(MCoherenceData, dv='Coherency', within='Sound', subject='Subject', correction=True)
 
-    return (F_rmanova, M_rmanova)
+    return (FCoherenceData, F_rmanova, MCoherenceData, M_rmanova)
 
 def printOneWayANOVA(F_rmanova, M_rmanova, style, channels, method):
 
@@ -158,17 +174,25 @@ def main():
 
                 leveneResult, rmanova = doMixedANOVA(coherenceData)
                 #printMixedANOVA(leveneResult, rmanova, style, file, methodList[i])
-                F_rmanova, M_rmanova = doOneWayANOVA(coherenceData)
+                FCoherenceData, F_rmanova, MCoherenceData, M_rmanova = doOneWayANOVA(coherenceData)
                 #printOneWayANOVA(F_rmanova, M_rmanova, style, file, methodList[i])
 
                 #mixed ANOVA and one way ANOVA significant if assumptions about variance valid and p value significant
                 mixedSignificant = mixedSignificance(leveneResult, rmanova)
-                F_signficant = oneWaySignificance(F_rmanova)
+                F_significant = oneWaySignificance(F_rmanova)
                 M_significant = oneWaySignificance(M_rmanova)
 
 
 
-                #runTests(mixedSignificant, rmanova, coherenceData)
+                resultsString1 = runTests(mixedSignificant, rmanova, coherenceData, False)
+                resultsString2 = runTests(F_significant, F_rmanova, FCoherenceData, True)
+                resultsString3 = runTests(M_significant, M_rmanova, MCoherenceData, True)
+
+                directory4 = r"significance-results" + "\\" + style + "\\"
+                filename = style + "-" + methodList[i]
+                printResults(directory4 + filename + "-mixed-posthoc.txt", style, file, methodList[i], resultsString1)
+                printResults(directory4 + filename + "-F-posthoc.txt", style, file, methodList[i], resultsString2)
+                printResults(directory4 + filename + "-M-posthoc.txt", style, file, methodList[i], resultsString3)
 
 
 

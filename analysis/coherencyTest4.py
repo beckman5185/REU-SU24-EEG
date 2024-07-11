@@ -192,6 +192,7 @@ def generateTable(timeDomain, alpha, filtered):
         EEGdata = pd.read_csv(directory + "/" + file, header=None)
         EEGdata = EEGdata.drop(columns=[16], axis=1)
 
+
         #do analysis for each method
         for i in range(len(methodList)):
             coherencySeries = doAnalysis(EEGdata, methodList[i], timeDomain, alpha, filtered)

@@ -122,6 +122,7 @@ def doAnalysis(data, function, timeDomain, alpha, filtered):
     #storing one coherency value for each channel pair
     coherencySeries = pd.Series(index=channelIndex)
 
+
     #loop over all channel pairs
     for i in range(0, len(analysisChannels)):
 
