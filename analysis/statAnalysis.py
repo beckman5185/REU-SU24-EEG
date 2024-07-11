@@ -142,7 +142,9 @@ def main():
     #paramsList = ['time-unfiltered-output', 'time-filtered-output', 'alpha-unfiltered-output',
     #              'alpha-filtered-output', 'gamma-unfiltered-output', 'gamma-filtered-output']
 
-    paramsList = ['time-filtered-output', 'alpha-filtered-output', 'gamma-filtered-output']
+    #paramsList = ['time-filtered-output', 'alpha-filtered-output', 'gamma-filtered-output', 'full-filtered-output']
+
+    paramsList = ['full-filtered-output']
 
     #for each parameter combination
     for style in paramsList:
@@ -173,9 +175,9 @@ def main():
 
 
                 leveneResult, rmanova = doMixedANOVA(coherenceData)
-                #printMixedANOVA(leveneResult, rmanova, style, file, methodList[i])
+                printMixedANOVA(leveneResult, rmanova, style, file, methodList[i])
                 FCoherenceData, F_rmanova, MCoherenceData, M_rmanova = doOneWayANOVA(coherenceData)
-                #printOneWayANOVA(F_rmanova, M_rmanova, style, file, methodList[i])
+                printOneWayANOVA(F_rmanova, M_rmanova, style, file, methodList[i])
 
                 #mixed ANOVA and one way ANOVA significant if assumptions about variance valid and p value significant
                 mixedSignificant = mixedSignificance(leveneResult, rmanova)
@@ -194,9 +196,9 @@ def main():
                     os.makedirs(directory4)
 
                 filename = style + "-" + methodList[i]
-                printResults(directory4 + filename + "-mixed-posthoc.txt", style, file, methodList[i], resultsString1)
-                printResults(directory4 + filename + "-F-posthoc.txt", style, file, methodList[i], resultsString2)
-                printResults(directory4 + filename + "-M-posthoc.txt", style, file, methodList[i], resultsString3)
+                #printResults(directory4 + filename + "-mixed-posthoc.txt", style, file, methodList[i], resultsString1)
+                #printResults(directory4 + filename + "-F-posthoc.txt", style, file, methodList[i], resultsString2)
+                #printResults(directory4 + filename + "-M-posthoc.txt", style, file, methodList[i], resultsString3)
 
 
 

@@ -21,21 +21,30 @@ def tcc(delta, ei, ej):
 def disp(ei, ej):
     m = len(ei)
 
-    normalized_ei = ei / np.linalg.norm(ei)
-    normalized_ej = ej / np.linalg.norm(ej)
+    #normalized_ei = ei / np.linalg.norm(ei)
+    #normalized_ej = ej / np.linalg.norm(ej)
 
-    correlation = scipy.signal.correlate(normalized_ei, normalized_ej)
+    #normalized_ei = (ei - np.mean(ei)) / np.std(ei)
+    #normalized_ej = (ej - np.mean(ej)) / np.std(ej)
+
+    normalized_ei = np.abs(ei - np.mean(ei))
+    normalized_ej = np.abs(ej - np.mean(ej))
+
+
+    correlation = scipy.signal.correlate(ei, ej)
     #sum = np.sum(correlation)
 
     #factor1 = np.sum(normalized_ei ** 2)
     #factor2 = np.sum(normalized_ej ** 2)
     #normalizing_factor = np.sqrt(factor1 * factor2)
-    #normalizing_factor = np.linalg.norm(normalized_ei) * np.linalg.norm(normalized_ej)
+    normalizing_factor = np.linalg.norm(normalized_ei) * np.linalg.norm(normalized_ej)
 
     #note: don't use on frequency domain, only time series
 
 
-    disp =  np.mean(correlation) #normalizing_factor / (2*m - 1)
+    disp =  np.mean(correlation) / normalizing_factor #/ (2*m - 1)
+
+    print("DISP: " + str(disp))
 
     return disp
 
@@ -55,8 +64,11 @@ def main():
 
     signalFrame = pd.read_csv(r"../Nature Raw Txt/Ball2_Nature_EEGData_fl10_N2.txt", header=None)
 
-    signal1 = pd.Series(signalFrame[0]) #[0, 1, 3, 4, 7, 2]
-    signal2 = pd.Series(signalFrame[8]) #[0, -1, -3, -4, -7, -2]
+    signal1 = [1, 2, 3, 4, 5, 6] #pd.Series(signalFrame[0])
+
+    #signal2 = pd.Series(signalFrame[0])
+    #signal2 = pd.Series(signalFrame[8]) #[0, -1, -3, -4, -7, -2]
+    signal2 = signal1 #[6, 5, 4, 3, 2, 1]
     #signal2 = [6, 8, 2, 4, 7, 8]
 
     oldcos = np.dot(signal1, signal2) / (np.linalg.norm(signal1) * np.linalg.norm(signal2))
