@@ -189,6 +189,10 @@ def main():
                 resultsString3 = runTests(M_significant, M_rmanova, MCoherenceData, True)
 
                 directory4 = r"significance-results" + "\\" + style + "\\"
+
+                if not os.path.exists(directory4):
+                    os.makedirs(directory4)
+
                 filename = style + "-" + methodList[i]
                 printResults(directory4 + filename + "-mixed-posthoc.txt", style, file, methodList[i], resultsString1)
                 printResults(directory4 + filename + "-F-posthoc.txt", style, file, methodList[i], resultsString2)

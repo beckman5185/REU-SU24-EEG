@@ -30,29 +30,10 @@ def DTW_similarity(ChA, ChB, timeDomain):
     return distance
 
 def LCS_similarity(ChA, ChB, timeDomain):
-    if timeDomain:
-        #get fourier transform
-        #freqChA = scipy.fft.fft(ChA)
-        #freqChB = scipy.fft.fft(ChB)
 
-        #get power spectrum
-        #freqChA = np.abs(scipy.fft.fft(ChA)) ** 2
-        #freqChB = np.abs(scipy.fft.fft(ChB)) ** 2
-
-        # getting just alpha band
-        #low, high = 8, 13
-        #scale = 30000 / 500
-        #low_idx, high_idx = int(low * scale), int(high * scale)
-        #freqChA = freqChA[low_idx:high_idx]
-        #freqChB = freqChB[low_idx:high_idx]
-
-        #error = abs(getError(freqChA, freqChB))
-
-        #error is 1/10th mean of the two series
-        error = abs(getError(ChA, ChB))
-    else:
-        #error is 1/10th mean of power spectrum of alpha band
-        error = abs(getError(ChA, ChB))
+    # error is 1/10th mean of power spectrum of two series
+    #see coherencyTest3 for 1/10th mean of alpha band
+    error = abs(getError(ChA, ChB))
 
     #get length of longest common subsequence relative to vector length
     length = len(LCS(ChA, ChB, error))
@@ -66,28 +47,10 @@ def filter(seriesA, seriesB, filtered):
         seriesA = scipy.signal.savgol_filter(seriesA, 15, 5)
         seriesB = scipy.signal.savgol_filter(seriesB, 15, 5)
 
-        # apply bandpass filter to data
-        '''
-        numtaps1 = 200
-        cutoff1 = [1, 40]
-        samplingFreq = 500
-        hammingCoeffs = scipy.signal.firwin(numtaps1, cutoff1, window='hamming', pass_zero='bandpass',
-                                            fs=samplingFreq)
-
-        denoms = [1] * len(hammingCoeffs)
-
-
-        seriesA = scipy.signal.lfilter(hammingCoeffs, denoms, seriesA)
-        seriesB = scipy.signal.lfilter(hammingCoeffs, denoms, seriesB)
-
-        seriesA = np.abs(scipy.fft.fft(seriesA)) ** 2
-        seriesB = np.abs(scipy.fft.fft(seriesB)) ** 2
-        '''
-
     return seriesA, seriesB
 
 
-def frequency(seriesA, seriesB, timeDomain, alpha):
+def frequency(seriesA, seriesB, timeDomain, freqBand):
     if (not timeDomain):
         # getting power spectrum
         seriesA = np.abs(scipy.fft.fft(seriesA)) ** 2
@@ -98,11 +61,14 @@ def frequency(seriesA, seriesB, timeDomain, alpha):
         # seriesB = scipy.fft.fft(seriesB)
 
         # getting just alpha band
-        if alpha:
+        if freqBand == 'alpha':
             low, high = 8, 13
-        else:
+        elif freqBand == 'gamma':
         # getting just gamma band
             low, high = 35, 44
+        #getting full band (filtered)
+        elif freqBand == 'full':
+            low, high = 0.005, 150
         scale = 30000 / 500
         low_idx, high_idx = int(low * scale), int(high * scale)
         seriesA = seriesA[low_idx:high_idx]
@@ -113,7 +79,7 @@ def frequency(seriesA, seriesB, timeDomain, alpha):
 
 
 
-def doAnalysis(data, function, timeDomain, alpha, filtered):
+def doAnalysis(data, function, timeDomain, freqBand, filtered):
 
     #channels under analysis
     analysisChannels = [(1, 9), (2, 10), (6, 14), (7, 15), (8, 16), (3, 11), (4, 12), (5, 13)]
@@ -135,7 +101,7 @@ def doAnalysis(data, function, timeDomain, alpha, filtered):
         seriesA, seriesB = filter(seriesA, seriesB, filtered)
 
         #for frequency domain, get the power spectrum of the time series
-        seriesA, seriesB = frequency(seriesA, seriesB, timeDomain, alpha)
+        seriesA, seriesB = frequency(seriesA, seriesB, timeDomain, freqBand)
 
         #get coherency value for current channel pair
         coherencySeries[channelName] = function(seriesA, seriesB, timeDomain)
@@ -159,7 +125,7 @@ def getGender(lastName):
 
 
 
-def generateTable(timeDomain, alpha, filtered):
+def generateTable(timeDomain, freqBand, filtered):
     #list of channels under analysis and methods of analysis
     channelIndex = ['Fp1-Fp2', 'F3-F4', 'F7-F8', 'T3-T4', 'T5-T6', 'C3-C4', 'P3-P4', 'O1-O2']
     methodList = [cosine_similarity, RMS_similarity, peak_similarity, SSD_similarity, DTW_similarity, LCS_similarity]
@@ -195,7 +161,7 @@ def generateTable(timeDomain, alpha, filtered):
 
         #do analysis for each method
         for i in range(len(methodList)):
-            coherencySeries = doAnalysis(EEGdata, methodList[i], timeDomain, alpha, filtered)
+            coherencySeries = doAnalysis(EEGdata, methodList[i], timeDomain, freqBand, filtered)
 
             #for each channel pair, insert coherency results into pair list table
             for j in range (0, len(channelIndex)):
@@ -217,10 +183,12 @@ def generateTable(timeDomain, alpha, filtered):
             filename = "//" + channelIndex[j] + ".csv"
             if timeDomain:
                 directory2 = r"time-"
-            elif alpha:
+            elif freqBand == 'alpha':
                 directory2 = r"alpha-"
-            else:
+            elif freqBand == 'gamma':
                 directory2 = r"gamma-"
+            elif freqBand == 'full':
+                directory2 = r"full-"
 
             if filtered:
                 directory2 += r"filtered-output//" + methodList[i].__name__
@@ -236,11 +204,12 @@ def generateTable(timeDomain, alpha, filtered):
 def generateAll():
     timeList = [True, False]
     filterList = [True, False]
+    freqList = ['alpha', 'gamma', 'full']
 
     #timeDomain: true is time, false is frequency
-    #alpha: true is alpha band, false is gamma band (only applicable if frequency)
+    #freqband: choose between alpha, gamma, and full (only applicable if frequency)
     #filtered: true is filtered, false is unfiltered
-    generateTable(False, False, False)
+    generateTable(timeList[1], freqList[2], filterList[0])
 
     #for time in timeList:
         #for filter in filterList:

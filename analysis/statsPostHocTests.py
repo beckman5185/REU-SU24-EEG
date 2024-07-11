@@ -211,7 +211,7 @@ def fisher_lsd_test(rmanova, coherenceData, oneWay):
     #find every combination of two sounds
     combinations = list(itertools.combinations(soundList, 2))
 
-    fisher_results = pd.DataFrame(columns = ['Significant', 'Difference'])
+    fisher_results = pd.DataFrame(columns = ['Significant', 'Difference', 'Least Significant Difference'])
 
     #for each combination, find the mean difference
     for pair in combinations:
@@ -222,7 +222,7 @@ def fisher_lsd_test(rmanova, coherenceData, oneWay):
         significant = difference > fisher_lsd
 
         #load results into dataframe
-        fisher_results.loc[str(pair)] = [significant, difference]
+        fisher_results.loc[str(pair)] = [significant, difference, fisher_lsd]
 
 
     return fisher_results
