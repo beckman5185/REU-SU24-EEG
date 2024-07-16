@@ -71,10 +71,14 @@ def t_test_sound(coherenceData):
         sound1, sound2 = soundDict[pair[0]], soundDict[pair[1]]
 
         #equal variances determined by variance rule of thumb
-        equalVar = varRuleOfThumb(sound1, sound2)
+        testStat, p_val = scipy.stats.levene(sound1, sound2)
+        equalVar = p_val > 0.05 #varRuleOfThumb(sound1, sound2)
 
         #calculate t statistic and p value
-        t_statistic, p_value = scipy.stats.ttest_ind(sound1, sound2, equal_var=equalVar)
+        t_statistic, p_value = scipy.stats.ttest_rel(sound1, sound2) #, equal_var=equalVar)
+
+        if not equalVar:
+            t_statistic, p_value = 0, 1
 
         #evaluate significance with corrected alpha
         significance = p_value < corrected_alpha

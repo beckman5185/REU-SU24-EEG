@@ -1,5 +1,6 @@
 import pingouin as pg
 import pandas as pd
+import numpy as np
 import os
 from statVarianceTests import leveneTest
 from statsPostHocTests import tukey, scheffe, t_test_sound, t_test_gender, fisher_lsd_test
@@ -40,20 +41,20 @@ def oneWaySignificance(rmanova):
 def runTests(significant, rmanova, coherenceData, oneWay):
     resultsString = ""
 
-    if (significant):
-        tukeyResult = tukey(coherenceData)
-        scheffeResult = scheffe(coherenceData)
-        fisherResult = fisher_lsd_test(rmanova, coherenceData, oneWay)
+    #if (significant):
+        #tukeyResult = tukey(coherenceData)
+        #scheffeResult = scheffe(coherenceData)
+        #fisherResult = fisher_lsd_test(rmanova, coherenceData, oneWay)
 
-        resultsString += "TUKEY: \n" + str(tukeyResult) + "\nSCHEFFE: \n" + str(scheffeResult) + "\nFISHER: \n" + fisherResult.to_string()
+        #resultsString += "TUKEY: \n" + str(tukeyResult) + "\nSCHEFFE: \n" + str(scheffeResult) + "\nFISHER: \n" + fisherResult.to_string()
 
+    if (not oneWay):
+        t_test_sound_results = t_test_sound(coherenceData)
+        resultsString += "\nT TEST (SOUND): \n" + t_test_sound_results.to_string()
 
-    t_test_sound_results = t_test_sound(coherenceData)
-    resultsString += "\nT TEST (SOUND): \n" + t_test_sound_results.to_string()
-
-    if not oneWay:
-        t_test_gender_results = t_test_gender(coherenceData)
-        resultsString += "\nT TEST (GENDER): \n" + t_test_gender_results.to_string()
+    #if not oneWay:
+    #    t_test_gender_results = t_test_gender(coherenceData)
+    #    resultsString += "\nT TEST (GENDER): \n" + t_test_gender_results.to_string()
 
     return resultsString
 
@@ -142,9 +143,9 @@ def main():
     #paramsList = ['time-unfiltered-output', 'time-filtered-output', 'alpha-unfiltered-output',
     #              'alpha-filtered-output', 'gamma-unfiltered-output', 'gamma-filtered-output']
 
-    #paramsList = ['time-filtered-output', 'alpha-filtered-output', 'gamma-filtered-output', 'full-filtered-output']
+    paramsList = ['time-filtered-output', 'alpha-filtered-output', 'gamma-filtered-output', 'full-filtered-output']
 
-    paramsList = ['full-filtered-output']
+    #paramsList = ['time-filtered-output']
 
     #for each parameter combination
     for style in paramsList:
@@ -156,6 +157,7 @@ def main():
         else:
             methodList = ['cosine_similarity', 'RMS_similarity', 'peak_similarity', 'SSD_similarity', 'LCS_similarity']
 
+        #methodList = ['LCS_similarity']
 
         #for each method
         for i in range(len(methodList)):
@@ -174,10 +176,13 @@ def main():
 
 
 
+
+
                 leveneResult, rmanova = doMixedANOVA(coherenceData)
-                printMixedANOVA(leveneResult, rmanova, style, file, methodList[i])
+                #printMixedANOVA(leveneResult, rmanova, style, file, methodList[i])
                 FCoherenceData, F_rmanova, MCoherenceData, M_rmanova = doOneWayANOVA(coherenceData)
-                printOneWayANOVA(F_rmanova, M_rmanova, style, file, methodList[i])
+                #printOneWayANOVA(F_rmanova, M_rmanova, style, file, methodList[i])
+
 
                 #mixed ANOVA and one way ANOVA significant if assumptions about variance valid and p value significant
                 mixedSignificant = mixedSignificance(leveneResult, rmanova)
@@ -190,12 +195,18 @@ def main():
                 resultsString2 = runTests(F_significant, F_rmanova, FCoherenceData, True)
                 resultsString3 = runTests(M_significant, M_rmanova, MCoherenceData, True)
 
+                print(resultsString1)
+                print(resultsString2)
+                print(resultsString3)
+
                 directory4 = r"significance-results" + "\\" + style + "\\"
 
                 if not os.path.exists(directory4):
                     os.makedirs(directory4)
 
-                filename = style + "-" + methodList[i]
+
+
+                #filename = style + "-" + methodList[i]
                 #printResults(directory4 + filename + "-mixed-posthoc.txt", style, file, methodList[i], resultsString1)
                 #printResults(directory4 + filename + "-F-posthoc.txt", style, file, methodList[i], resultsString2)
                 #printResults(directory4 + filename + "-M-posthoc.txt", style, file, methodList[i], resultsString3)
