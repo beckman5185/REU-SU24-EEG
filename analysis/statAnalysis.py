@@ -6,6 +6,13 @@ from statVarianceTests import leveneTest
 from statsPostHocTests import tukey, scheffe, t_test_sound, t_test_gender, fisher_lsd_test
 
 
+def make_filepath(string):
+    directory1 = r"significance-results\\" + string + "\\"
+    if not os.path.exists(directory1):
+        os.makedirs(directory1)
+
+    return directory1
+
 def mixedSignificance(leveneResult, rmanova):
     #establish important indexes
     soundIndex = 1
@@ -52,7 +59,8 @@ def runTests(significant, rmanova, coherenceData, oneWay):
         #    print("Significant Fisher LSD!")
 
         resultsString += "TUKEY: \n" + str(tukeyResult) + "\nSCHEFFE: \n" + str(scheffeResult) + "\nFISHER: \n" + fisherResult.to_string()
-
+    else:
+        resultsString += "TUKEY: not applicable \n SCHEFFE: not applicable \nFISHER: not applicable"
 
     t_test_sound_results = t_test_sound(coherenceData)
 
@@ -102,14 +110,19 @@ def doOneWayANOVA(coherenceData):
 
 def printOneWayANOVA(F_rmanova, M_rmanova, style, channels, method):
 
-
+    #get results strings for female and male groups
     F_results = "ONE-WAY RM ANOVA: \n" + F_rmanova.to_string()
     M_results = "ONE-WAY RM ANOVA: \n" + M_rmanova.to_string()
 
-    directory3 = r"significance-results" + "\\" + style + "\\"
+    #get filepath to print results to
+    directory3 = make_filepath(style + "\\ANOVA\\Female\\")
+    directory4 = make_filepath(style + "\\ANOVA\\Male\\")
+
+
+    #print results
     filename = directory3 + style + "-" + method + "-F-" + "one-way-anova.txt"
     printResults(filename, style, channels, method, F_results)
-    filename = directory3 + style + "-" + method + "-M-" + "one-way-anova.txt"
+    filename = directory4 + style + "-" + method + "-M-" + "one-way-anova.txt"
     printResults(filename, style, channels, method, M_results)
 
 
@@ -129,8 +142,10 @@ def doMixedANOVA(coherenceData):
 def printMixedANOVA(leveneResult, rmanova, style, channels, method):
 
     results = "LEVENE TEST: " + str(leveneResult) + "\nMIXED ANOVA: \n" + rmanova.to_string()
-    directory3 = r"significance-results" + "\\" +  style + "\\"
-    filename = directory3 + style + "-" + method + "-" + "rmanova.txt"
+    directory3 = r"significance-results" + "\\" +  style + "\\ANOVA\\Mixed\\"
+    if not os.path.exists(directory3):
+        os.makedirs(directory3)
+    filename = directory3 + style + "-" + method + "-" + "mixed-anova.txt"
     printResults(filename, style, channels, method, results)
 
 
@@ -154,21 +169,21 @@ def main():
     #paramsList = ['time-unfiltered-output', 'time-filtered-output', 'alpha-unfiltered-output',
     #              'alpha-filtered-output', 'gamma-unfiltered-output', 'gamma-filtered-output']
 
-    #paramsList = ['time-filtered-output', 'alpha-filtered-output', 'gamma-filtered-output', 'full-filtered-output']
+    paramsList = ['time-filtered-output', 'alpha-filtered-output', 'gamma-filtered-output', 'full-filtered-output']
 
-    paramsList = ['time-filtered-output', 'gamma-filtered-output', 'full-filtered-output']
+    #paramsList = ['time-filtered-output', 'gamma-filtered-output', 'full-filtered-output']
 
     #for each parameter combination
     for style in paramsList:
 
-        #no DTW in frequency domain
+        #no DTW, cross-correlation, coherence, or imaginary coherence in frequency domain
         if style == 'time-filtered-output': #or style == 'time-unfiltered-output':
-            methodList = ['cosine_similarity', 'RMS_similarity', 'peak_similarity', 'SSD_similarity', 'DTW_similarity',
+            methodList = ['cosine_similarity', 'RMS_similarity', 'peak_similarity', 'peak_similarity_at_peak', 'SSD_similarity', 'DTW_similarity',
                           'LCS_similarity', 'cross_correlation_similarity', 'coherence_similarity', 'i_coherence_similarity']
         else:
-            methodList = ['cosine_similarity', 'RMS_similarity', 'peak_similarity', 'SSD_similarity', 'LCS_similarity']
+            methodList = ['cosine_similarity', 'RMS_similarity', 'peak_similarity', 'peak_similarity_at_peak', 'SSD_similarity', 'LCS_similarity']
 
-        methodList = ['peak_similarity']
+        #methodList = ['peak_similarity']
 
 
         #for each method
@@ -191,9 +206,9 @@ def main():
 
 
                 leveneResult, rmanova = doMixedANOVA(coherenceData)
-                #printMixedANOVA(leveneResult, rmanova, style, file, methodList[i])
+                printMixedANOVA(leveneResult, rmanova, style, file, methodList[i])
                 FCoherenceData, F_rmanova, MCoherenceData, M_rmanova = doOneWayANOVA(coherenceData)
-                #printOneWayANOVA(F_rmanova, M_rmanova, style, file, methodList[i])
+                printOneWayANOVA(F_rmanova, M_rmanova, style, file, methodList[i])
 
 
                 #mixed ANOVA and one way ANOVA significant if assumptions about variance valid and p value significant
@@ -202,23 +217,22 @@ def main():
                 M_significant = oneWaySignificance(M_rmanova)
 
 
-
+                #get results string by running tests
                 resultsString1 = runTests(mixedSignificant, rmanova, coherenceData, False)
                 resultsString2 = runTests(F_significant, F_rmanova, FCoherenceData, True)
                 resultsString3 = runTests(M_significant, M_rmanova, MCoherenceData, True)
 
 
-                directory4 = r"significance-results" + "\\" + style + "\\"
+                #make filepath to print results at
+                directory1 = make_filepath(style + "\\post-hoc\\Mixed\\")
+                directory2 = make_filepath(style + "\\post-hoc\\Female\\")
+                directory3 = make_filepath(style + "\\post-hoc\\Male\\")
 
-                if not os.path.exists(directory4):
-                    os.makedirs(directory4)
-
-
-
+                #print results
                 filename = style + "-" + methodList[i]
-                printResults(directory4 + filename + "-mixed-posthoc.txt", style, file, methodList[i], resultsString1)
-                printResults(directory4 + filename + "-F-posthoc.txt", style, file, methodList[i], resultsString2)
-                printResults(directory4 + filename + "-M-posthoc.txt", style, file, methodList[i], resultsString3)
+                printResults(directory1 + filename + "-mixed-posthoc.txt", style, file, methodList[i], resultsString1)
+                printResults(directory2 + filename + "-F-posthoc.txt", style, file, methodList[i], resultsString2)
+                printResults(directory3 + filename + "-M-posthoc.txt", style, file, methodList[i], resultsString3)
 
 
 
