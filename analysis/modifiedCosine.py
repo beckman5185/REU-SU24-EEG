@@ -53,37 +53,29 @@ def plotCorrelation():
 
     m = len(signal1)
 
-    corr_values = []
+
     delta_values = []
     for i in range(-1*m + 1, m):
         time = i / 500
         delta_values.append(time)
 
-    #for i in delta_values:
-        #normalized_tcc = tcc(i, signal1 - np.mean(signal1), signal2 - np.mean(signal2)) / len(signal1) / (np.std(signal1) * np.std(signal2))
 
+    corr_values = scipy.signal.correlate(signal1 - np.mean(signal1), signal2 - np.mean(signal2)) / (m * np.std(signal1, ddof = 1) * np.std(signal2, ddof = 1))
+    corr_values2 = scipy.signal.correlate(signal3 - np.mean(signal3), signal4 - np.mean(signal4)) / (m * np.std(signal3, ddof = 1) * np.std(signal4, ddof = 1))
 
-        #corr_values.append(normalized_tcc)
-        #print(normalized_tcc)
-
-    corr_values = scipy.signal.correlate(signal1 - np.mean(signal1), signal2 - np.mean(signal2))
-    norm_corr_values = corr_values / m / np.std(signal1) / np.std(signal2)
-
-    corr_values2 = scipy.signal.correlate(signal3 - np.mean(signal3), signal4 - np.mean(signal4))
-    norm_corr_values2 = corr_values / m / np.std(signal3) / np.std(signal4)
 
 
     plt.figure(2, figsize=(12, 9))
 
-    plt.plot(delta_values, norm_corr_values2, label="N8")
-    plt.plot(delta_values, norm_corr_values, label="N2")
+    plt.plot(delta_values, corr_values2, label="N8")
+    plt.plot(delta_values, corr_values, label="N2")
     plt.xlabel("Lag (s)")
     plt.ylabel("Normalized Cross Correlation")
     plt.legend(shadow=True, framealpha=1)
     plt.xlim(-5, 5)
     plt.show()
-    print(norm_corr_values[m])
-    print(norm_corr_values2[m])
+    print(corr_values[m])
+    print(corr_values2[m])
 
 
 
@@ -105,13 +97,14 @@ def main():
 
     signal1 = pd.Series(signalFrame[0])
 
-    signal2 = signal1 #pd.Series(signalFrame[8])
+    signal2 = pd.Series(signalFrame[8])
     #signal2 = pd.Series(signalFrame[8]) #[0, -1, -3, -4, -7, -2]
     #signal2 = signal1 #[6, 5, 4, 3, 2, 1]
     #signal2 = [6, 8, 2, 4, 7, 8]
 
     print("LAG 0")
     print(tcc(0, signal1 - np.mean(signal1), signal2 - np.mean(signal2)) / len(signal1) / (np.std(signal1) * np.std(signal2)))
+    print(scipy.stats.pearsonr(signal1, signal2)[0])
 
     oldcos = np.dot(signal1, signal2) / (np.linalg.norm(signal1) * np.linalg.norm(signal2))
     print("Traditional Cos Similarity")
@@ -135,4 +128,4 @@ def main():
 
 
 if __name__ == "__main__":
-    plotCorrelation()
+    main()

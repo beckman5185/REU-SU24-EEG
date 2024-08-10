@@ -41,22 +41,33 @@ def oneWaySignificance(rmanova):
 def runTests(significant, rmanova, coherenceData, oneWay):
     resultsString = ""
 
-    #if (significant):
-        #tukeyResult = tukey(coherenceData)
-        #scheffeResult = scheffe(coherenceData)
-        #fisherResult = fisher_lsd_test(rmanova, coherenceData, oneWay)
+    if (significant):
 
-        #resultsString += "TUKEY: \n" + str(tukeyResult) + "\nSCHEFFE: \n" + str(scheffeResult) + "\nFISHER: \n" + fisherResult.to_string()
+        tukeyResult = tukey(coherenceData)
+        #add for tukey, only for one-way apparently
+        scheffeResult = scheffe(coherenceData)
+        #add for scheffe
+        fisherResult = fisher_lsd_test(rmanova, coherenceData, oneWay)
+        #if True in fisherResult['Significant']:
+        #    print("Significant Fisher LSD!")
 
-    if (not oneWay):
-        t_test_sound_results = t_test_sound(coherenceData)
-        resultsString += "\nT TEST (SOUND): \n" + t_test_sound_results.to_string()
+        resultsString += "TUKEY: \n" + str(tukeyResult) + "\nSCHEFFE: \n" + str(scheffeResult) + "\nFISHER: \n" + fisherResult.to_string()
 
-    #if not oneWay:
-    #    t_test_gender_results = t_test_gender(coherenceData)
-    #    resultsString += "\nT TEST (GENDER): \n" + t_test_gender_results.to_string()
+
+    t_test_sound_results = t_test_sound(coherenceData)
+
+    resultsString += "\nT TEST (SOUND): \n" + t_test_sound_results.to_string()
+    #if True in t_test_sound_results['Significant']:
+    #    print("Significant T Test for Sound!")
+
+    if not oneWay:
+        t_test_gender_results = t_test_gender(coherenceData)
+        resultsString += "\nT TEST (GENDER): \n" + t_test_gender_results.to_string()
+        #if True in t_test_gender_results['Significant']:
+        #    print("Significant T Test for Gender!")
 
     return resultsString
+
 
 
 
@@ -143,9 +154,9 @@ def main():
     #paramsList = ['time-unfiltered-output', 'time-filtered-output', 'alpha-unfiltered-output',
     #              'alpha-filtered-output', 'gamma-unfiltered-output', 'gamma-filtered-output']
 
-    paramsList = ['time-filtered-output', 'alpha-filtered-output', 'gamma-filtered-output', 'full-filtered-output']
+    #paramsList = ['time-filtered-output', 'alpha-filtered-output', 'gamma-filtered-output', 'full-filtered-output']
 
-    #paramsList = ['time-filtered-output']
+    paramsList = ['time-filtered-output', 'gamma-filtered-output', 'full-filtered-output']
 
     #for each parameter combination
     for style in paramsList:
@@ -153,11 +164,12 @@ def main():
         #no DTW in frequency domain
         if style == 'time-filtered-output': #or style == 'time-unfiltered-output':
             methodList = ['cosine_similarity', 'RMS_similarity', 'peak_similarity', 'SSD_similarity', 'DTW_similarity',
-                          'LCS_similarity']
+                          'LCS_similarity', 'cross_correlation_similarity', 'coherence_similarity', 'i_coherence_similarity']
         else:
             methodList = ['cosine_similarity', 'RMS_similarity', 'peak_similarity', 'SSD_similarity', 'LCS_similarity']
 
-        #methodList = ['LCS_similarity']
+        methodList = ['peak_similarity']
+
 
         #for each method
         for i in range(len(methodList)):
@@ -195,9 +207,6 @@ def main():
                 resultsString2 = runTests(F_significant, F_rmanova, FCoherenceData, True)
                 resultsString3 = runTests(M_significant, M_rmanova, MCoherenceData, True)
 
-                print(resultsString1)
-                print(resultsString2)
-                print(resultsString3)
 
                 directory4 = r"significance-results" + "\\" + style + "\\"
 
@@ -206,10 +215,10 @@ def main():
 
 
 
-                #filename = style + "-" + methodList[i]
-                #printResults(directory4 + filename + "-mixed-posthoc.txt", style, file, methodList[i], resultsString1)
-                #printResults(directory4 + filename + "-F-posthoc.txt", style, file, methodList[i], resultsString2)
-                #printResults(directory4 + filename + "-M-posthoc.txt", style, file, methodList[i], resultsString3)
+                filename = style + "-" + methodList[i]
+                printResults(directory4 + filename + "-mixed-posthoc.txt", style, file, methodList[i], resultsString1)
+                printResults(directory4 + filename + "-F-posthoc.txt", style, file, methodList[i], resultsString2)
+                printResults(directory4 + filename + "-M-posthoc.txt", style, file, methodList[i], resultsString3)
 
 
 

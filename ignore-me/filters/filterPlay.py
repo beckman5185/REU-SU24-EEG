@@ -7,7 +7,7 @@ plt.rcParams.update({'font.size': 20})
 
 
 def rawFreqPlots():
-    directory = r"../Nature Raw Txt"
+    directory = r"../../Nature Raw Txt"
     EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
     EEGdata = EEGdata.drop(columns=[16], axis=1)
 
@@ -22,23 +22,24 @@ def rawFreqPlots():
     #x value is frequency, 60 sec at 500Hz
     x = [None] * 30001
     for i in range (0, 30001):
-        x[i] = (i / 60.0) - 500 //2
+        x[i] = (i / 60.0) #- 500
 
 
     #Plotting Ch1 and Ch9 data on same graph
-    h = np.fft.fftshift(freqCh1)
+    h = freqCh1 #np.fft.fftshift(freqCh1)
 
     plt.plot(x, abs(h))#, label="Fp1, Channel 1")
     #h = freqCh9
     #plt.plot(x, abs(h), label="Fp2, Channel 2")
 
     #show alpha band only
-    #plt.xlim(8, 13)
+    plt.xlim(8, 13)
+    plt.ylim(0, 30000)
 
     #graph labels
     plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Wave Amplitude (V)')
-    plt.title('EEG Data in Frequency Domain (unfiltered, shifted)')
+    plt.ylabel('Amplitude (V)')
+    plt.title('EEG Data in Frequency Domain')
     #plt.legend(shadow=True, framealpha=1)
     #plt.ylim(0, 60000)
     plt.show()
@@ -158,7 +159,7 @@ def finalFilter():
 
 
 def rawTimePlots():
-    directory = r"Nature Raw Txt"
+    directory = r"../../Nature Raw Txt"
     EEGdata = pd.read_csv(directory + "/" + "Ball2_Nature_EEGData_fl10_N2.txt", header=None)
     EEGdata = EEGdata.drop(columns=[16], axis=1)
 
@@ -170,7 +171,7 @@ def rawTimePlots():
 
     ax.plot(t, s)
 
-    ax.set(xlabel='Time (s)', ylabel='Wave Amplitude (microV)', title='EEG Data in Time Domain (unfiltered)')
+    ax.set(xlabel='Time (s)', ylabel='Amplitude (V)', title='EEG Data in Time Domain')
     ax.grid()
 
     plt.show()
@@ -323,7 +324,7 @@ def tryFilterNoGraphs():
 
 if __name__ == "__main__":
     rawFreqPlots()
-    #rawTimePlots()
+    rawTimePlots()
     #filterCompare()
     #finalFilter()
     #tryFilter()

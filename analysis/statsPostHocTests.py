@@ -5,6 +5,7 @@ import itertools
 import scipy.stats
 from statVarianceTests import varRuleOfThumb
 import pandas as pd
+import pingouin as pg
 
 def tukey(coherenceData):
 
@@ -63,7 +64,7 @@ def t_test_sound(coherenceData):
     corrected_alpha = alpha / len(combinations)
 
 
-    t_test_results = pd.DataFrame(columns=['Significant', 'T Statistic', 'P Value'])
+    t_test_results = pd.DataFrame(columns=['Significant', 'T Statistic', 'P Value', 'Mean of Sound 1', 'Mean of Sound 2', 'Sphericity'])
 
     #for each pair of sounds, perform a two-tailed two-sample t test with corrected alpha
     for pair in combinations:
@@ -71,22 +72,34 @@ def t_test_sound(coherenceData):
         sound1, sound2 = soundDict[pair[0]], soundDict[pair[1]]
 
         #equal variances determined by variance rule of thumb
-        testStat, p_val = scipy.stats.levene(sound1, sound2)
-        equalVar = p_val > 0.05 #varRuleOfThumb(sound1, sound2)
+        #testStat, p_val = scipy.stats.levene(sound1, sound2)
+        #Levene is for between group comparison
+        #equalVar = p_val > 0.05 #varRuleOfThumb(sound1, sound2)
+
+        mauchlyTuple = pg.sphericity(coherenceData, dv='Coherency', within='Sound', subject='Subject', alpha=0.05)
+        sphericity = mauchlyTuple[0]
+
 
         #calculate t statistic and p value
         t_statistic, p_value = scipy.stats.ttest_rel(sound1, sound2) #, equal_var=equalVar)
 
-        if not equalVar:
-            t_statistic, p_value = 0, 1
+        #if not equalVar:
+        #    t_statistic, p_value = 0, 1
+
+
+        mean1 = np.mean(sound1)
+        mean2 = np.mean(sound2)
 
         #evaluate significance with corrected alpha
         significance = p_value < corrected_alpha
 
 
+        pairString = str(pair[0])+"-"+str(pair[1])
+
+
 
         #load results into results dataframe
-        t_test_results.loc[str(pair)] = [significance, t_statistic, p_value]
+        t_test_results.loc[pairString] = [significance, t_statistic, p_value, mean1, mean2, sphericity]
         #t_test_results.loc[pair, 'T Statistic'] = t_statistic
         #t_test_results.loc[pair, 'P Value'] = p_value
 
@@ -138,10 +151,15 @@ def t_test_gender(coherenceData):
         Fsound, Msound = soundDict[sound]['F'], soundDict[sound]['M']
 
         #equal variances determined by variance rule of thumb
-        equalVar = varRuleOfThumb(Fsound, Msound)
+        testStat, p_val = scipy.stats.levene(Fsound, Msound)
+        equalVar = p_val > 0.05 #varRuleOfThumb(sound1, sound2)
+        #equalVar = varRuleOfThumb(Fsound, Msound)
 
         #calculate t statistic and p value
         t_statistic, p_value = scipy.stats.ttest_ind(Fsound, Msound, equal_var=equalVar)
+
+        if not equalVar:
+            t_statistic, p_value = 0, 1
 
         #evaluate significance with corrected alpha
         significance = p_value < corrected_alpha

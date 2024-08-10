@@ -7,6 +7,8 @@ from hs import LCS, getError
 from coherencyHelper import *
 import os
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import seaborn as sb
 
 def cosine_similarity(ChA, ChB, timeDomain):
     return cos_helper(ChA, ChB)
@@ -16,6 +18,9 @@ def RMS_similarity(ChA, ChB, timeDomain):
 
 def peak_similarity(ChA, ChB, timeDomain):
     return peak_helper(ChA, ChB)
+
+def peak_similarity_at_peak(ChA, ChB, timeDomain):
+    return peak_at_peak_helper(ChA, ChB)
 
 def SSD_similarity(ChA, ChB, timeDomain):
     return SSD_helper(ChA, ChB)
@@ -40,6 +45,38 @@ def LCS_similarity(ChA, ChB, timeDomain):
     relativeLength = length/len(ChA)
 
     return relativeLength
+
+def cross_correlation_similarity(ChA, ChB, timeDomain):
+    #cross-correlation only valid in time domain
+    similarity = None
+    if timeDomain:
+        #lag 0 is largest absolute correlation value for signal
+        #normalized cross-correlation at lag 0 is Pearson coefficient
+        similarity = scipy.stats.pearsonr(ChA, ChB)[0]
+
+    return similarity
+
+def coherence_similarity(ChA, ChB, timeDomain):
+    #coherence similarity only valid with raw time series input
+    coherence = None
+    if timeDomain:
+        coherence = coherence_helper(ChA, ChB, False)
+
+    return coherence
+
+def i_coherence_similarity(ChA, ChB, timeDomain):
+    #coherence similarity only valid with raw time series input
+    coherence = None
+    if timeDomain:
+        coherence = coherence_helper(ChA, ChB, True)
+
+    return coherence
+
+
+
+
+
+
 
 def filter(seriesA, seriesB, filtered):
     if (filtered):
@@ -128,7 +165,8 @@ def getGender(lastName):
 def generateTable(timeDomain, freqBand, filtered):
     #list of channels under analysis and methods of analysis
     channelIndex = ['Fp1-Fp2', 'F3-F4', 'F7-F8', 'T3-T4', 'T5-T6', 'C3-C4', 'P3-P4', 'O1-O2']
-    methodList = [cosine_similarity, RMS_similarity, peak_similarity, SSD_similarity, DTW_similarity, LCS_similarity]
+    methodList = [cosine_similarity, RMS_similarity, peak_similarity, peak_similarity_at_peak, SSD_similarity, DTW_similarity, LCS_similarity, cross_correlation_similarity, coherence_similarity, i_coherence_similarity]
+    #methodList = [peak_similarity]
 
     #variables stored in output table
     tableIndex = ['Subject', 'Gender', 'Sound', 'Coherency']
@@ -201,6 +239,9 @@ def generateTable(timeDomain, freqBand, filtered):
             pairTableList[i][j].to_csv(directory2 + filename)
 
 
+
+
+
 def generateAll():
     timeList = [True, False]
     filterList = [True, False]
@@ -209,11 +250,11 @@ def generateAll():
     #timeDomain: true is time, false is frequency
     #freqband: choose between alpha, gamma, and full (only applicable if frequency)
     #filtered: true is filtered, false is unfiltered
-    generateTable(timeList[1], freqList[2], filterList[0])
+    #generateTable(timeList[0], freqList[2], filterList[0])
 
-    #for time in timeList:
-        #for filter in filterList:
-            #generateTable(time, filter)
+    for time in timeList:
+        for freq in freqList:
+            generateTable(time, freq, filterList[0])
 
 
 if __name__ == "__main__":
