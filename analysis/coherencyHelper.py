@@ -24,7 +24,7 @@ def RMS_helper(x, y):
 
 
 def peak_helper(x, y):
-    series = []
+    series = [None] * len(x)
 
     for i in range (0, len(x)):
         num1 = x[i]

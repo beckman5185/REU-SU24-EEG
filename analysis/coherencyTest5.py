@@ -183,9 +183,11 @@ def generateTable(timeDomain, freqBand, filtered):
     #        pairTableList.iloc[i, j] = pd.DataFrame(columns=tableIndex)
 
 
+
     #looking into folder with data
     directory = r"../Nature Raw Txt"
     for file in os.listdir(directory):
+
         #get sound and last name and gender of participant
         soundName = file.split('_')[-1].strip('.txt')
         lastName = file.split('_')[0]
@@ -195,6 +197,8 @@ def generateTable(timeDomain, freqBand, filtered):
         #read in EEG data
         EEGdata = pd.read_csv(directory + "/" + file, header=None)
         EEGdata = EEGdata.drop(columns=[16], axis=1)
+
+
 
 
         #do analysis for each method
@@ -244,7 +248,7 @@ def generateTable(timeDomain, freqBand, filtered):
 
 def generateAll():
     timeList = [True, False]
-    filterList = [True, False]
+    #filterList = [True, False]
     freqList = ['alpha', 'gamma', 'full']
 
     #timeDomain: true is time, false is frequency
@@ -254,7 +258,8 @@ def generateAll():
 
     for time in timeList:
         for freq in freqList:
-            generateTable(time, freq, filterList[0])
+            #decided to only use filtered output
+            generateTable(time, freq, True)
 
 
 if __name__ == "__main__":
